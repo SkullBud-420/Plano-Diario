@@ -1,0 +1,3445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skull Bud 420 - Diário de Cultivo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34db95;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+            --vegetative: #27ae60;
+            --preflower: #9b59b6;
+            --flowering: #e74c3c;
+            --fruiting: #f39c12;
+            --transition: #3498db;
+            --auto-color: #8e44ad;
+            --photo-color: #e67e22;
+            --card-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            --card-shadow-hover: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #000000, #000000, #091506);
+            color: #e0e0e0;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.424);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 5px solid var(--vegetative);
+        }
+
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(
+                90deg,
+                var(--vegetative),
+                var(--preflower),
+                var(--flowering),
+                var(--fruiting)
+            );
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            color: #b0b0b0;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 15px;
+        }
+
+        .plant-selector {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 12px;
+            max-width: 800px;
+            margin: 0 auto 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .selector-title {
+            font-size: 1.2rem;
+            color: #fff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #plantCount {
+            background: rgba(52, 152, 219, 0);
+            color: #ffffff;
+            padding: 3px 10px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
+        .carousel-container {
+            position: relative;
+            overflow: hidden;
+            padding: 40px;
+        }
+
+        .plant-carousel {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            gap: 15px;
+            padding: 10px 0;
+            scroll-behavior: smooth;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .plant-carousel::-webkit-scrollbar {
+            display: none;
+        }
+
+        .plant-card {
+            background: rgba(12, 16, 14, 0);
+            border-radius: 10px;
+            padding: 15px;
+            position: relative;
+            border-left: 4px solid var(--vegetative);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            flex: 0 0 auto;
+            width: 220px;
+            scroll-snap-align: start;
+        }
+
+        .plant-card.photo {
+            border-left-color: var(--photo-color);
+        }
+
+        .plant-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            background: rgb(0, 0, 0);
+        }
+
+        .plant-card.selected {
+            border: 4px solid var(--secondary);
+            transform: translateY(-5px);
+            background: rgba(36, 76, 4, 0.185);
+        }
+
+        .plant-name {
+            font-size: 1.2rem;
+            color: white;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .plant-details {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            margin-bottom: 8px;
+        }
+
+        .germination-date {
+            font-size: 0.85rem;
+            color: #8eccaf;
+            margin-top: 5px;
+        }
+
+        .plant-age {
+            background: rgba(52, 152, 219, 0.2);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: inline-block;
+        }
+
+        .plant-type {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .plant-phase {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        .phase-vegetative {
+            background: rgba(39, 174, 96, 0.3);
+            color: #7dcea0;
+            border: 1px solid rgba(39, 174, 96, 0.5);
+        }
+        .phase-preflower {
+            background: rgba(168, 99, 167, 0.3);
+            color: #d7bde2;
+            border: 1px solid rgba(155, 89, 182, 0.5);
+        }
+        .phase-flowering {
+            background: rgba(163, 60, 231, 0.585);
+            color: #f5b1ee;
+            border: 1px solid rgba(231, 60, 163, 0.697);
+        }
+        .phase-fruiting {
+            background: rgba(243, 18, 157, 0.768);
+            color: #d9a0fa;
+            border: 1px solid rgba(228, 18, 243, 0.5);
+        }
+        .phase-transition {
+            background: rgba(52, 152, 219, 0.3);
+            color: #aed6f1;
+            border: 1px solid rgba(52, 152, 219, 0.5);
+        }
+
+        .type-auto {
+            background: rgba(168, 84, 205, 0.45);
+            color: #d6a2e8;
+        }
+
+        .type-photo {
+            background: rgba(243, 126, 42, 0.644);
+            color: #f8c471;
+        }
+
+        .carousel-nav {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            gap: 10px;
+        }
+
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: var(--secondary);
+            transform: scale(1.2);
+        }
+
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(30, 40, 35, 0);
+            border: none;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 30%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .carousel-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-btn:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        .carousel-btn i {
+            font-size: 1.2rem;
+        }
+
+        .prev-btn {
+            left: 0;
+        }
+
+        .next-btn {
+            right: 0;
+        }
+
+        .add-plant-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--success);
+            color: white;
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 30%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .add-plant-btn:hover {
+            transform: scale(1.1);
+            background: #2ecc71;
+        }
+
+        .plant-card-btn {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .delete-plant-btn {
+            top: 10px;
+            right: 10px;
+            background: rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+        }
+
+        .edit-plant-btn {
+            top: 50px;
+            right: 10px;
+            background: rgba(52, 152, 219, 0.3);
+            color: #3498db;
+        }
+
+        .plant-card-btn:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .timeline-section {
+            background: rgb(8, 15, 10);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            margin-top: 20px;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--secondary);
+        }
+
+        .timeline-title {
+            font-size: 1.8rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .timeline-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .folder-btn {
+            background: linear-gradient(135deg, #8e44ad, #9b59b6);
+            color: white;
+        }
+
+        .timeline-container {
+            position: relative;
+            padding: 0;
+        }
+
+        .timeline-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 100%;
+            width: 5px;
+            background: linear-gradient(
+                to bottom,
+                var(--vegetative),
+                var(--preflower),
+                var(--flowering),
+                var(--fruiting)
+            );
+            border-radius: 3px;
+            z-index: 0;
+        }
+
+        .timeline-event {
+            position: relative;
+            margin-bottom: 40px;
+            width: 90%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 0;
+        }
+
+        .event-card {
+            background: rgb(16, 20, 19);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--secondary);
+            position: relative;
+            width: 100%;
+        }
+
+        .event-card.current {
+            border-left-color: var(--success);
+            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.3);
+        }
+
+        .event-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .event-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: white;
+        }
+
+        .vegetative-icon {
+            background: var(--vegetative);
+        }
+        .preflower-icon {
+            background: var(--preflower);
+        }
+        .flowering-icon {
+            background: var(--flowering);
+        }
+        .fruiting-icon {
+            background: var(--fruiting);
+        }
+        .transition-icon {
+            background: var(--transition);
+        }
+        .action-icon {
+            background: var(--secondary);
+        }
+
+        .event-date {
+            font-weight: bold;
+            color: var(--secondary);
+            font-size: 1.2rem;
+        }
+
+        .event-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .event-phase {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .phase-vegetative {
+            background: rgba(39, 174, 96, 0.3);
+            color: #7dcea0;
+        }
+        .phase-preflower {
+            background: rgba(155, 89, 182, 0.3);
+            color: #d7bde2;
+        }
+        .phase-flowering {
+            background: rgba(231, 60, 165, 0.3);
+            color: #f5b7b1;
+        }
+        .phase-fruiting {
+            background: rgba(168, 18, 243, 0.312);
+            color: #fad7a0;
+        }
+        .phase-transition {
+            background: rgba(52, 152, 219, 0.3);
+            color: #aed6f1;
+        }
+
+        .event-description {
+            color: #b0b0b0;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            font-size: 1.05rem;
+        }
+
+        .event-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 18px;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .detail-item {
+            flex: 1 1 120px;
+            background: rgba(30, 40, 35, 0.5);
+            padding: 10px 12px;
+            border-radius: 8px;
+            border-left: 3px solid var(--secondary);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 100px;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .event-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .event-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            background: #1a2a1f;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            display: block;
+        }
+
+        .event-image:hover {
+            transform: scale(1.05);
+            border-color: var(--secondary);
+        }
+
+        .actions-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .action-chip {
+            background: rgba(52, 152, 219, 0.3);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.9rem;
+            color: #3498db;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .action-chip:hover {
+            background: rgba(52, 152, 219, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .action-chip i {
+            margin-right: 6px;
+            font-size: 0.9rem;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .action-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(30, 40, 35, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .action-button:hover {
+            transform: translateY(-3px);
+            border-color: var(--secondary);
+            background: rgba(40, 50, 45, 0.9);
+        }
+
+        .action-button.selected {
+            background: rgba(52, 152, 219, 0.3);
+            border-color: var(--secondary);
+            transform: scale(1.05);
+        }
+
+        .action-button i {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .action-button .action-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #b0b0b0;
+        }
+
+        .empty-state i {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-modal-content {
+            max-width: 95%;
+            max-height: 95%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-modal-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .image-close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ffffff;
+            color: rgb(0, 0, 0);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .event-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .event-modal-content {
+            background: rgba(20, 30, 25, 0.95);
+            width: 90%;
+            max-width: 600px;
+            border-radius: 15px;
+            padding: 25px;
+            position: relative;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .event-modal-content h2 {
+            color: white;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b0b0b0;
+            font-weight: 500;
+        }
+
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(30, 40, 35, 0.7);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus, 
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+
+        .image-upload {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .image-preview {
+            margin-top: 10px;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.cancel {
+            background: rgba(120, 120, 120, 0.3);
+            color: white;
+        }
+
+        .modal-btn.save {
+            background: var(--success);
+            color: white;
+        }
+
+        .modal-btn.delete {
+            background: rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #b0b0b0;
+            margin-top: 30px;
+            font-size: 0.9rem;
+        }
+
+        .status-bar {
+            padding: 8px;
+            background: rgba(40, 40, 50, 0.8);
+            border-radius: 6px;
+            margin-bottom: 12px;
+            text-align: center;
+            display: none;
+        }
+
+        .status-bar.success {
+            background: rgba(39, 174, 96, 0.3);
+            border-left: 4px solid #27ae60;
+        }
+
+        .status-bar.error {
+            background: rgba(231, 76, 60, 0.3);
+            border-left: 4px solid #e74c3c;
+        }
+
+        .folder-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(52, 152, 219, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .folder-indicator i {
+            color: #3498db;
+        }
+
+        .event-actions {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .event-action-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .event-action-btn:hover {
+            transform: scale(1.1);
+            background: var(--secondary);
+            color: #fff;
+        }
+
+        .edit-event-btn {
+            background: rgba(52, 152, 219, 0.15);
+            color: #3498db;
+        }
+
+        .delete-event-btn {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+        }
+
+        .event-action-btn:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Validação de formulários */
+        .input-error {
+            border: 1px solid var(--danger) !important;
+        }
+        
+        .error-message {
+            color: var(--danger);
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+        
+        /* Permissão de arquivos */
+        .permission-request {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .permission-content {
+            background: rgba(20, 30, 25, 0.95);
+            width: 90%;
+            max-width: 500px;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .permission-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            header {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .plant-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .timeline-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .timeline-actions {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .timeline-container {
+                padding: 0;
+            }
+            
+            .timeline-container::before {
+                left: 50%;
+            }
+            
+            .timeline-event {
+                padding-left: 0;
+                width: 95%;
+            }
+            
+            .timeline-event::before {
+                left: calc(50% - 10 px);
+            }
+            
+            .event-details {
+                grid-template-columns: 1fr;
+            }
+
+            .carousel-container {
+                padding: 0 30px;
+            }
+
+            .carousel-btn {
+                width: 35px;
+                height: 35px;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .action-buttons {
+                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            }
+        }
+    
+        .plano-rega-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--secondary);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .plano-rega-btn:hover {
+            background: #2980b9;
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 600px) {
+            .plano-rega-btn {
+                top: 10px;
+                left: 10px;
+                padding: 8px 14px;
+                font-size: 0.85rem;
+            }
+        }
+        .card-action-menu {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(20, 30, 25, 0.95);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            padding: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 20;
+        }
+
+        .card-action-menu button {
+            background: none;
+            border: none;
+            color: white;
+            font-weight: 500;
+            padding: 5px 10px;
+            text-align: left;
+            font-size: 0.95rem;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .card-action-menu button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Estilos para o calendário de rega */
+        .watering-calendar {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px auto;
+            max-width: 800px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-title {
+            font-size: 1.2rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .calendar-nav-btn {
+            background: rgba(30, 40, 35, 0.8);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-nav-btn:hover {
+            background: var(--secondary);
+        }
+
+        .calendar-days-container {
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding: 10px 0;
+        }
+
+        .calendar-days-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .calendar-days {
+            display: flex;
+            gap: 10px;
+            min-width: max-content;
+        }
+
+        .day-card {
+            background: rgba(12, 16, 14, 0.493);
+            border-radius: 10px;
+            padding: 15px;
+            min-width: 120px;
+            position: relative;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--vegetative);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .day-card.today {
+            border-left-color: var(--secondary);
+            transform: scale(1.05);
+            background: rgba(40, 50, 45, 0.95);
+        }
+
+        .day-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .day-number {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .day-phase {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .watering-info {
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .watering-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+
+        .watering-status i {
+            font-size: 0.9rem;
+        }
+
+        .watering-yes {
+            color: var(--success);
+        }
+
+        .watering-no {
+            color: var(--danger);
+        }
+
+        .watering-values {
+            margin-top: 8px;
+            font-size: 0.85rem;
+        }
+
+        .watering-values div {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .watering-label {
+            color: #b0b0b0;
+        }
+
+        .watering-value {
+            font-weight: bold;
+        }
+
+        .current-day-indicator {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        @media (max-width: 768px) {
+            .day-card {
+                min-width: 100px;
+                padding: 10px;
+            }
+        }
+            .calendar-week-indicator {
+            background: rgba(52, 152, 219, 0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+
+        .plant-age-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .plant-weeks {
+            background: rgba(155, 89, 182, 0.2);
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        /* 3. Linha central só aparece quando planta é selecionada */
+.timeline-container::before {
+    display: none; /* Esconder por padrão */
+}
+
+.timeline-container.has-plant::before {
+    display: block; /* Mostrar apenas quando tem planta */
+}
+
+/* 2. Ajustar estilo do indicador de semana */
+.calendar-week-indicator {
+    background: rgba(52, 152, 219, 0.2);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin-left: 10px;
+    font-weight: bold;
+}
+ /* Novo estilo para botão de configuração */
+        .config-btn {
+            position: absolute;
+            top: 30px; /* Movido para o canto superior esquerdo */
+            left: 20px;
+            background: rgba(52, 152, 219, 0.3);
+            color: #3498db;
+            border: none;
+            width:25px;
+            height: 25px;
+            border-radius: 30%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .config-btn:hover {
+            background: #3498db;
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        /* Estilo para NPK no calendário */
+        .watering-npk {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #f1c40f;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 8px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        /* Botão de menu de contexto */
+        .plant-menu-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            font-size: 1.2rem;
+            z-index: 10;
+        }
+
+        .plant-menu-btn:hover {
+            color: white;
+        }
+
+        .plant-menu {
+            position: absolute;
+            top: 35px;
+            right: 10px;
+            background: rgba(30, 40, 35, 0.95);
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .plant-menu button {
+            padding: 8px 15px;
+            background: none;
+            border: none;
+            color: #ddd;
+            text-align: left;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .plant-menu button:hover {
+            background: rgba(52, 152, 219, 0.3);
+        }
+        /* Estilo para o menu de contexto na timeline */
+        .event-actions {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+        }
+
+        .event-menu-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .event-menu-btn:hover {
+            background: var(--secondary);
+        }
+
+        .event-menu {
+            position: absolute;
+            top: 40px;
+            right: 0;
+            background: rgba(30, 40, 35, 0.95);
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .event-menu button {
+            padding: 8px 15px;
+            background: none;
+            border: none;
+            color: #ddd;
+            text-align: left;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .event-menu button:hover {
+            background: rgba(52, 152, 219, 0.3);
+        }
+        
+        /* Estilo para o menu de NPK no calendário */
+        .calendar-menu {
+            position: absolute;
+            top: 40px;
+            right: 0;
+            background: rgba(30, 40, 35, 0.95);
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            z-index: 100;
+        }
+        /* Adicionar este novo estilo para o botão de rega rápida */
+        .day-water-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(52, 152, 219, 0.3);
+            color: #3498db;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .day-water-btn:hover {
+            background: #3498db;
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .day-water-btn.watered {
+            background: var(--success);
+            color: white;
+        }
+        
+        .day-water-btn.watered i {
+            color: white;
+        }
+        
+        .watered-icon {
+            color: var(--success);
+            animation: pulse 0.5s;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Garantir que os cards de dia tenham posição relativa */
+        .day-card {
+            position: relative;
+        }
+
+        /* Modal de seleção de rega */
+        .watering-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .watering-modal-content {
+            background: rgba(20, 30, 25, 0.95);
+            width: 90%;
+            max-width: 400px;
+            border-radius: 15px;
+            padding: 25px;
+            position: relative;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
+        }
+
+        .watering-options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .watering-option {
+            padding: 12px;
+            background: rgba(30, 40, 35, 0.7);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .watering-option:hover {
+            background: rgba(52, 152, 219, 0.3);
+            border-color: var(--secondary);
+        }
+
+        .watering-option i {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    
+   <div class="container">
+        <header>
+            <button class="config-btn" id="configBtn">
+                <i class="fas fa-flask"></i>
+            </button>
+            <h1><i class="fas fa-skull"></i> Skull Bud 420</h1>
+            <p class="subtitle">Diário de Cultivo</p>
+        </header>
+
+        
+
+        <div class="plant-selector">
+            <div class="selector-title">
+                <i class="fas fa-seedling"></i> Suas Plantas <span id="plantCount"></span>
+            </div>
+            <button class="add-plant-btn" id="addPlantBtn">
+                <i class="fas fa-plus"></i>
+            </button>
+            <div class="carousel-container">
+                <button class="carousel-btn prev-btn">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div id="plantList" class="plant-carousel">
+                    <!-- Plantas serão carregadas aqui -->
+                </div>
+                <button class="carousel-btn next-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            <div class="carousel-nav">
+                <!-- Pontos de navegação serão adicionados aqui -->
+            </div>
+        </div>
+
+        <!-- Calendário de Rega (com menu de contexto) -->
+    <div class="watering-calendar" id="wateringCalendar" style="display: none;">
+        <div class="calendar-header">
+            <h3 class="calendar-title">
+                <i class="fas fa-calendar-alt"></i> Calendário de Rega
+                <span class="calendar-week-indicator" id="weekIndicator">S1</span>
+            </h3>
+            <div class="calendar-nav">
+                <button class="calendar-menu-btn">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div class="calendar-menu">
+                    <button id="configureNPKBtn">Configurar NPK</button>
+                </div>
+                <button class="calendar-nav-btn" id="prevWeekBtn">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="calendar-nav-btn" id="nextWeekBtn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        <div class="calendar-days-container">
+            <div class="calendar-days" id="calendarDays">
+                    <!-- Dias serão carregados aqui -->
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-section">
+            <div class="timeline-header">
+                <h2 class="timeline-title" id="timelineTitle">
+                    <i class="fas fa-chart-line"></i> <span id="plantNameTitle"></span>
+                </h2>
+                <div class="timeline-actions">
+                    <button class="action-btn folder-btn" id="selectFolderBtn" style="display: none;">
+                        <i class="fas fa-folder-open"></i> Selecionar Pasta
+                    </button>
+                    <button class="action-btn export-btn" id="exportTimelineBtn">
+                        <i class="fas fa-file-pdf"></i> Exportar PDF
+                    </button>
+                </div>
+            </div>
+<button class="action-btn add-btn" id="addEventBtn">
+                <i class="fas fa-plus"></i> Adicionar Novo Evento
+            </button>
+            <div class="timeline-container" id="timelineContainer">
+                <div class="empty-state">
+                    <i class="fas fa-seedling"></i>
+                    <p>Selecione uma planta para visualizar sua linha do tempo</p>
+                    <p>Os eventos de cultivo serão exibidos aqui</p>
+                </div>
+            </div>
+
+            
+        </div>
+    </div>
+
+    <!-- Modal para exibir imagens em tela cheia -->
+    <div id="imageModal" class="image-modal">
+        <div class="image-modal-content">
+            <button class="image-close-modal" onclick="closeImageModal()">×</button>
+            <img id="modalImage" src="" />
+        </div>
+    </div>
+
+    <!-- Modal para registro de eventos -->
+    <div id="eventModal" class="event-modal">
+        <div class="event-modal-content">
+            <h2><i class="fas fa-calendar-plus"></i> <span id="eventModalTitle">Adicionar Registro</span></h2>
+            <form id="eventForm">
+                <input type="hidden" id="eventId">
+                <div class="form-group">
+                    <label for="eventDate">Data</label>
+                    <input type="date" id="eventDate" required>
+                    <div id="dateError" class="error-message" style="display: none;"></div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ph">pH</label>
+                        <input type="number" id="ph" step="0.1" min="0" max="14" placeholder="Ex: 6.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="ec">EC (mS/cm)</label>
+                        <input type="number" id="ec" step="0.1" min="0" placeholder="Ex: 1.2">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="temperature">Temperatura (°C)</label>
+                        <input type="number" id="temperature" step="0.1" placeholder="Ex: 24.5">
+                    </div>
+                    <div class="form-group">
+                        <label for="humidity">Umidade (%)</label>
+                        <input type="number" id="humidity" min="0" max="100" placeholder="Ex: 65">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="wateringType">Tipo de Rega</label>
+                    <select id="wateringType">
+                        <option value="">Selecione...</option>
+                        <option value="Água">Água</option>
+                        <option value="Fertilizante Mineral">Fertilizante Mineral</option>
+                        <option value="Fertilizante Organo-Mineral">Fertilizante Organo-Mineral</option>
+                        <option value="Fertilizante Orgânico">Fertilizante Orgânico</option>
+                        <option value="Flush">Flush</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Ações Realizadas</label>
+                    <div class="action-buttons" id="actionButtons">
+                        <div class="action-button" data-action="Poda FIM">
+                            <i class="fas fa-cut"></i>
+                            <div class="action-label">Poda FIM</div>
+                        </div>
+                        <div class="action-button" data-action="Poda Top">
+                            <i class="fas fa-cut"></i>
+                            <div class="action-label">Poda Top</div>
+                        </div>
+                        <div class="action-button" data-action="LST">
+                            <i class="fas fa-vine"></i>
+                            <div class="action-label">LST</div>
+                        </div>
+                        <div class="action-button" data-action="SCROG">
+                            <i class="fas fa-border-all"></i>
+                            <div class="action-label">SCROG</div>
+                        </div>
+                        <div class="action-button" data-action="Transplante">
+                            <i class="fas fa-seedling"></i>
+                            <div class="action-label">Transplante</div>
+                        </div>
+                        <div class="action-button" data-action="Defoliação">
+                            <i class="fas fa-leaf"></i>
+                            <div class="action-label">Defoliação</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Observações</label>
+                    <textarea id="notes" rows="3" placeholder="Descreva o desenvolvimento da planta..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Imagens</label>
+                    <div class="image-upload">
+                        <input type="file" id="eventImage" accept="image/*" capture="camera">
+                        <div class="image-preview" id="imagePreview"></div>
+                    </div>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="button" class="modal-btn delete" id="deleteEventBtn" style="display: none;">
+                        <i class="fas fa-trash"></i> Excluir
+                    </button>
+                    <button type="button" class="modal-btn cancel" onclick="closeEventModal()">Cancelar</button>
+                    <button type="submit" class="modal-btn save">Salvar Registro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal para adicionar/editar planta -->
+    <div id="plantModal" class="event-modal">
+        <div class="event-modal-content">
+            <h2><i class="fas fa-seedling"></i> <span id="plantModalTitle">Nova Planta</span></h2>
+            <form id="plantForm">
+                <input type="hidden" id="plantId">
+                <div class="form-group">
+                    <label for="plantName">Nome da Planta</label>
+                    <input type="text" id="plantName" placeholder="Ex: Gorilla Glue" required>
+                </div>
+                <div class="form-group">
+                    <label for="germinationDate">Data da Germinação</label>
+                    <input type="date" id="germinationDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="plantGenetics">Genética</label>
+                    <input type="text" id="plantGenetics" placeholder="Ex: Sativa Híbrida">
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Planta</label>
+                    <div style="display: flex; gap: 10px;">
+                        <label style="flex: 1; background: #512da8; padding: 10px; border-radius: 8px; text-align: center; cursor: pointer; color: white;">
+                            <input type="radio" name="plantType" value="auto" checked style="margin-right: 5px;">
+                            Automática
+                        </label>
+                        <label style="flex: 1; background: #0277bd; padding: 10px; border-radius: 8px; text-align: center; cursor: pointer; color: white;">
+                            <input type="radio" name="plantType" value="photo" style="margin-right: 5px;">
+                            Fotoperíodo
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-btn delete" id="deletePlantBtn" style="display: none;">
+                        <i class="fas fa-trash"></i> Excluir
+                    </button>
+                    <button type="button" class="modal-btn cancel" onclick="closePlantModal()">Cancelar</button>
+                    <button type="submit" class="modal-btn save">Salvar Planta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal para permissão de sistema de arquivos -->
+    <div id="permissionRequest" class="permission-request" style="display: none;">
+        <div class="permission-content">
+            <h2><i class="fas fa-folder-open"></i> Permissão de Acesso ao Sistema de Arquivos</h2>
+            <p>Para salvar e carregar imagens de forma eficiente, precisamos de acesso a um diretório no seu dispositivo.</p>
+            <p>Por favor, selecione um diretório para salvar os arquivos de imagem do diário.</p>
+            <div class="permission-buttons">
+                <button id="grantPermissionBtn" class="modal-btn save">Conceder Permissão</button>
+                <button id="denyPermissionBtn" class="modal-btn cancel">Recusar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para seleção de tipo de rega -->
+    <div id="wateringModal" class="watering-modal">
+        <div class="watering-modal-content">
+            <h2><i class="fas fa-tint"></i> Selecionar Tipo de Rega</h2>
+            <p id="wateringDateText">Para o dia: </p>
+            <div class="watering-options">
+                <div class="watering-option" data-type="Água">
+                    <i class="fas fa-tint"></i>
+                    <div>Água</div>
+                </div>
+                <div class="watering-option" data-type="Fertilizante Mineral">
+                    <i class="fas fa-flask"></i>
+                    <div>Fertilizante Mineral</div>
+                </div>
+                <div class="watering-option" data-type="Fertilizante Organo-Mineral">
+                    <i class="fas fa-leaf"></i>
+                    <div>Fertilizante Organo-Mineral</div>
+                </div>
+                <div class="watering-option" data-type="Fertilizante Orgânico">
+                    <i class="fas fa-seedling"></i>
+                    <div>Fertilizante Orgânico</div>
+                </div>
+                <div class="watering-option" data-type="Flush">
+                    <i class="fas fa-recycle"></i>
+                    <div>Flush</div>
+                </div>
+            </div>
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button type="button" class="modal-btn cancel" onclick="closeWateringModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Plano de Rega Avançado | Desenvolvido para Fertilizantes NPK</p>
+        <p>Cultive com sabedoria, colha com satisfação</p>
+        <p style="margin-top: 8px; font-weight: bold">
+            <a href="https://www.instagram.com/skullbud420" style="color: #3498db; text-decoration: none" target="_blank">
+                @SKULL BUD 420
+            </a>
+        </p>
+    </footer>
+<div id="statusBar" class="status-bar success" style="display: none"></div>
+   <div id="npkModal" class="event-modal">
+            <div class="event-modal-content">
+                <h2><i class="fas fa-flask"></i> Configuração de Fertilizantes</h2>
+                <form id="npkForm">
+                    <div class="form-group">
+                        <h3>Fase Vegetativa</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="vegN">Nitrogênio (N)</label>
+                                <input type="number" id="vegN" min="0" step="0.1" placeholder="Ex: 10">
+                            </div>
+                            <div class="form-group">
+                                <label for="vegP">Fósforo (P)</label>
+                                <input type="number" id="vegP" min="0" step="0.1" placeholder="Ex: 5">
+                            </div>
+                            <div class="form-group">
+                                <label for="vegK">Potássio (K)</label>
+                                <input type="number" id="vegK" min="0" step="0.1" placeholder="Ex: 5">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <h3>Fase de Floração</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="flowerN">Nitrogênio (N)</label>
+                                <input type="number" id="flowerN" min="0" step="0.1" placeholder="Ex: 5">
+                            </div>
+                            <div class="form-group">
+                                <label for="flowerP">Fósforo (P)</label>
+                                <input type="number" id="flowerP" min="0" step="0.1" placeholder="Ex: 10">
+                            </div>
+                            <div class="form-group">
+                                <label for="flowerK">Potássio (K)</label>
+                                <input type="number" id="flowerK" min="0" step="0.1" placeholder="Ex: 15">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <h3>Fase de Frutificação</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fruitN">Nitrogênio (N)</label>
+                                <input type="number" id="fruitN" min="0" step="0.1" placeholder="Ex: 3">
+                            </div>
+                            <div class="form-group">
+                                <label for="fruitP">Fósforo (P)</label>
+                                <input type="number" id="fruitP" min="0" step="0.1" placeholder="Ex: 12">
+                            </div>
+                            <div class="form-group">
+                                <label for="fruitK">Potássio (K)</label>
+                                <input type="number" id="fruitK" min="0" step="0.1" placeholder="Ex: 18">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-buttons">
+                        <button type="button" class="modal-btn cancel" onclick="closeNPKModal()">Cancelar</button>
+                        <button type="submit" class="modal-btn save">Salvar Configurações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Configuração do IndexedDB
+        const openDB = () => {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('PlantDiaryDB', 3);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    const oldVersion = event.oldVersion;
+                    
+                    if (oldVersion < 1 || !db.objectStoreNames.contains('plants')) {
+                        db.createObjectStore('plants', { keyPath: 'id' });
+                    }
+                    
+                    if (oldVersion < 1 || !db.objectStoreNames.contains('journalEntries')) {
+                        db.createObjectStore('journalEntries', { keyPath: 'id' });
+                    }
+                    
+                    if (oldVersion < 1 || !db.objectStoreNames.contains('npkSettings')) {
+                        db.createObjectStore('npkSettings');
+                    }
+                    
+                    if (oldVersion < 2 || !db.objectStoreNames.contains('permissions')) {
+                        db.createObjectStore('permissions');
+                    }
+                    
+                    if (oldVersion < 3 || !db.objectStoreNames.contains('appSettings')) {
+                        db.createObjectStore('appSettings');
+                    }
+                };
+            });
+        };
+        
+        // Armazena o handle do diretório
+        async function storeDirectoryHandle(handle) {
+            try {
+                const db = await openDB();
+                const tx = db.transaction('permissions', 'readwrite');
+                tx.objectStore('permissions').put(handle, 'directoryHandle');
+            } catch (error) {
+                console.error('Erro ao salvar o handle do diretório:', error);
+            }
+        }
+
+        // Recupera o handle do diretório
+        async function getDirectoryHandle() {
+            try {
+                const db = await openDB();
+                return new Promise((resolve) => {
+                    const tx = db.transaction('permissions', 'readonly');
+                    const request = tx.objectStore('permissions').get('directoryHandle');
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => resolve(null);
+                });
+            } catch (error) {
+                console.error('Erro ao recuperar o handle do diretório:', error);
+                return null;
+            }
+        }
+        
+        // Dados persistentes
+        let plants = [];
+        let journalEntries = [];
+        let selectedPlant = null;
+        let selectedEvent = null;
+        let currentPage = 0;
+        const cardsPerPage = 3;
+        let totalPages = 0;
+        let savedDirectory = 'Plano Diario';
+        let directoryHandle = null;
+        let permissionGranted = false;
+        let currentWeekOffset = 0;
+        let npkSettings = {
+            vegetative: { n: 10, p: 5, k: 5 },
+            flowering: { n: 5, p: 10, k: 15 },
+            fruiting: { n: 3, p: 12, k: 18 }
+        };
+        let currentWateringDate = null;
+
+        // Função para mostrar mensagens de status
+        function showStatusBar(message, type) {
+            const statusBar = document.getElementById('statusBar');
+            statusBar.textContent = message;
+            statusBar.className = `status-bar ${type}`;
+            statusBar.style.display = 'block';
+            
+            setTimeout(() => {
+                statusBar.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Configuração do IndexedDB para NPK
+        const openNPKDB = () => {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('NPKSettingsDB', 1);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('npkSettings')) {
+                        db.createObjectStore('npkSettings');
+                    }
+                };
+            });
+        };
+
+        // Armazenar configurações de NPK
+        async function saveNPKSettingsToDB(settings) {
+            try {
+                const db = await openNPKDB();
+                const tx = db.transaction('npkSettings', 'readwrite');
+                tx.objectStore('npkSettings').put(settings, 'currentSettings');
+            } catch (error) {
+                console.error('Erro ao salvar configurações de NPK:', error);
+            }
+        }
+
+        // Recuperar configurações de NPK
+        async function loadNPKSettingsFromDB() {
+            try {
+                const db = await openNPKDB();
+                return new Promise((resolve) => {
+                    const tx = db.transaction('npkSettings', 'readonly');
+                    const request = tx.objectStore('npkSettings').get('currentSettings');
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => resolve(null);
+                });
+            } catch (error) {
+                return null;
+            }
+        }
+
+        // Salvar configurações de NPK
+        function saveNPKSettings(e) {
+            e.preventDefault();
+            
+            npkSettings.vegetative = {
+                n: parseFloat(document.getElementById('vegN').value) || 10,
+                p: parseFloat(document.getElementById('vegP').value) || 5,
+                k: parseFloat(document.getElementById('vegK').value) || 5
+            };
+            
+            npkSettings.flowering = {
+                n: parseFloat(document.getElementById('flowerN').value) || 5,
+                p: parseFloat(document.getElementById('flowerP').value) || 10,
+                k: parseFloat(document.getElementById('flowerK').value) || 15
+            };
+            
+            npkSettings.fruiting = {
+                n: parseFloat(document.getElementById('fruitN').value) || 3,
+                p: parseFloat(document.getElementById('fruitP').value) || 12,
+                k: parseFloat(document.getElementById('fruitK').value) || 18
+            };
+            
+            saveNPKSettingsToDB(npkSettings);
+            showStatusBar('Configurações de NPK salvas com sucesso!', 'success');
+            closeNPKModal();
+            
+            if (selectedPlant) {
+                renderWateringCalendar(selectedPlant);
+            }
+        }
+
+        // Mostrar erro de validação
+        function showValidationError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+            
+            field.classList.add('input-error');
+            
+            let errorElement = field.nextElementSibling;
+            if (errorElement && errorElement.classList.contains('error-message')) {
+                errorElement.remove();
+            }
+            
+            errorElement = document.createElement('div');
+            errorElement.className = 'error-message';
+            errorElement.textContent = message;
+            field.parentNode.insertBefore(errorElement, field.nextSibling);
+        }
+        
+        // Resetar erros de validação
+        function resetValidationErrors() {
+            document.querySelectorAll('.input-error').forEach(field => {
+                field.classList.remove('input-error');
+            });
+            
+            document.querySelectorAll('.error-message').forEach(element => {
+                element.remove();
+            });
+        }
+        
+        // Inicializar o sistema de arquivos
+        async function initFileSystem() {
+            try {
+                const handle = await getDirectoryHandle();
+                
+                if (handle) {
+                    if (await verifyPermission(handle, true)) {
+                        directoryHandle = handle;
+                        permissionGranted = true;
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao inicializar sistema de arquivos:", error);
+            }
+            return false;
+        }
+        
+        // Verificar permissão
+        async function verifyPermission(handle, readWrite) {
+            const options = {};
+            if (readWrite) {
+                options.mode = 'readwrite';
+            }
+            
+            if (await handle.queryPermission(options) === 'granted') {
+                return true;
+            }
+            
+            if (await handle.requestPermission(options) === 'granted') {
+                return true;
+            }
+            
+            return false;
+        }
+        
+        // Solicitar acesso ao sistema de arquivos
+        async function requestDirectoryAccess() {
+            try {
+                const handle = await window.showDirectoryPicker({
+                    startIn: 'documents',
+                    id: 'plantDiaryImages',
+                    mode: 'readwrite'
+                });
+                
+                await storeDirectoryHandle(handle);
+                directoryHandle = handle;
+                permissionGranted = true;
+                return true;
+            } catch (error) {
+                console.error("Erro ao solicitar acesso ao diretório:", error);
+                return false;
+            }
+        }
+        
+        // Salvar imagem no sistema de arquivos
+        async function saveImageToFileSystem(imageFile) {
+            if (!directoryHandle || !permissionGranted) return null;
+            
+            try {
+                const fileName = `image-${Date.now()}.${imageFile.name.split('.').pop()}`;
+                const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
+                const writable = await fileHandle.createWritable();
+                await writable.write(imageFile);
+                await writable.close();
+                return fileName;
+            } catch (error) {
+                console.error("Erro ao salvar imagem:", error);
+                return null;
+            }
+        }
+        
+        // Carregar imagem do sistema de arquivos
+        async function loadImageFromFileSystem(fileName) {
+            if (!directoryHandle || !permissionGranted) return null;
+            
+            try {
+                const fileHandle = await directoryHandle.getFileHandle(fileName);
+                const file = await fileHandle.getFile();
+                return URL.createObjectURL(file);
+            } catch (error) {
+                console.error("Erro ao carregar imagem:", error);
+                return null;
+            }
+        }
+        
+        // Definir data atual como padrão nos formulários
+        function setTodayAsDefaultDate() {
+            const today = new Date();
+            const day = today.getDate();
+            const month = today.getMonth() + 1;
+            const year = today.getFullYear();
+            const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+            document.getElementById('eventDate').value = formattedDate;
+        }
+
+        // Função para abrir o modal de NPK
+        function openNPKModal() {
+            document.getElementById('vegN').value = npkSettings.vegetative.n;
+            document.getElementById('vegP').value = npkSettings.vegetative.p;
+            document.getElementById('vegK').value = npkSettings.vegetative.k;
+            
+            document.getElementById('flowerN').value = npkSettings.flowering.n;
+            document.getElementById('flowerP').value = npkSettings.flowering.p;
+            document.getElementById('flowerK').value = npkSettings.flowering.k;
+            
+            document.getElementById('fruitN').value = npkSettings.fruiting.n;
+            document.getElementById('fruitP').value = npkSettings.fruiting.p;
+            document.getElementById('fruitK').value = npkSettings.fruiting.k;
+            
+            document.getElementById('npkModal').style.display = 'flex';
+        }
+
+        function closeNPKModal() {
+            document.getElementById('npkModal').style.display = 'none';
+        }
+
+        // Funções para o modal de seleção de rega
+        function openWateringModal(date) {
+            currentWateringDate = date;
+            const dateObj = new Date(date);
+            const formattedDate = dateObj.toLocaleDateString('pt-BR');
+            document.getElementById('wateringDateText').textContent = `Para o dia: ${formattedDate}`;
+            document.getElementById('wateringModal').style.display = 'flex';
+        }
+
+        function closeWateringModal() {
+            document.getElementById('wateringModal').style.display = 'none';
+        }
+
+        // Função para marcar rega
+        function markWatering(date, type) {
+            if (!selectedPlant) {
+                showStatusBar('Selecione uma planta primeiro', 'error');
+                return;
+            }
+            
+            const existingEntry = journalEntries.find(entry => 
+                entry.plantId === selectedPlant.id && 
+                entry.date === date
+            );
+            
+            if (existingEntry) {
+                if (!confirm('Já existe um registro para este dia. Deseja substituir?')) {
+                    return;
+                }
+                
+                existingEntry.watering = type;
+                existingEntry.notes = existingEntry.notes || "Rega aplicada conforme calendário";
+                existingEntry.title = `Rega - ${type}`;
+            } else {
+                const newEvent = {
+                    id: String(Date.now()),
+                    plantId: selectedPlant.id,
+                    date: date,
+                    title: `Rega - ${type}`,
+                    watering: type,
+                    notes: "Rega aplicada conforme calendário",
+                    createdAt: new Date().toISOString()
+                };
+                journalEntries.push(newEvent);
+            }
+            
+            saveData();
+            renderWateringCalendar(selectedPlant);
+            loadTimeline(selectedPlant.id);
+            showStatusBar(`Rega ${type} marcada com sucesso!`, 'success');
+        }
+
+        // Renderizar lista de plantas com menu de contexto
+        function renderPlantList() {
+            const plantList = document.getElementById("plantList");
+            plantList.innerHTML = "";
+
+            const plantCountEl = document.getElementById('plantCount');
+            if (plantCountEl) {
+                plantCountEl.textContent = `(${plants.length})`;
+            }
+
+            plants.forEach(plant => {
+                const today = new Date();
+                const germDate = new Date(plant.germinationDate);
+                const ageInDays = Math.floor((today - germDate) / (1000 * 60 * 60 * 24)) + 1;
+                const ageInWeeks = Math.floor(ageInDays / 7) + 1;
+                const phase = getPlantPhase(plant);
+                const phaseName = getPhaseName(phase);
+                const phaseClass = getPhaseClass(phase);
+
+                const plantCard = document.createElement("div");
+                plantCard.className = `plant-card ${plant.type}`;
+                plantCard.dataset.id = plant.id;
+                plantCard.innerHTML = `
+                    <div class="plant-name">
+                        <i class="fas fa-seedling"></i> ${plant.name}
+                    </div>
+                    <div class="plant-details">
+                        <div>${plant.genetics || 'Híbrida'}</div>
+                        <div class="plant-type ${plant.type === 'auto' ? 'type-auto' : 'type-photo'}">
+                            ${plant.type === 'auto' ? 'Automática' : 'Fotoperíodo'}
+                        </div>
+                        <div class="plant-phase ${phaseClass}">
+                            <i class="fas fa-chart-line"></i> ${phaseName}
+                        </div>
+                    </div>
+                    <div class="germination-date">
+                        <i class="fas fa-calendar-day"></i> ${new Date(plant.germinationDate).toLocaleDateString('pt-BR')}
+                    </div>
+                    <div class="plant-age-container">
+                        <div class="plant-age">
+                            <i class="fas fa-calendar-day"></i> ${ageInDays} dias
+                        </div>
+                        <div class="plant-weeks">
+                            Semana ${ageInWeeks}
+                        </div>
+                    </div>
+                `;
+            
+                const menuBtn = document.createElement("button");
+                menuBtn.className = "plant-menu-btn";
+                menuBtn.innerHTML = '<i class="fas fa-ellipsis-v"></i>';
+                plantCard.appendChild(menuBtn);
+
+                const menu = document.createElement("div");
+                menu.className = "plant-menu";
+                menu.innerHTML = `
+                    <button class="menu-edit-btn" data-id="${plant.id}">Editar</button>
+                    <button class="menu-delete-btn" data-id="${plant.id}">Excluir</button>
+                `;
+                plantCard.appendChild(menu);
+
+                menuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    document.querySelectorAll('.plant-menu').forEach(m => {
+                        if (m !== menu) m.style.display = 'none';
+                    });
+                    menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+                });
+
+                menu.querySelector('.menu-edit-btn').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const plantId = this.dataset.id;
+                    editPlant(plantId);
+                    menu.style.display = 'none';
+                });
+
+                menu.querySelector('.menu-delete-btn').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const plantId = this.dataset.id;
+                    deletePlant(plantId);
+                    menu.style.display = 'none';
+                });
+
+                plantList.appendChild(plantCard);
+            });
+
+            totalPages = Math.ceil(plants.length / cardsPerPage);
+            updateCarouselNav();
+        }
+
+        // Renderizar calendário de rega
+        function renderWateringCalendar(plant) {
+            if (!plant) {
+                document.getElementById('wateringCalendar').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('wateringCalendar').style.display = 'block';
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+
+            const germDate = new Date(plant.germinationDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const plantAge = Math.floor((today - germDate) / (1000 * 60 * 60 * 24)) + 1;
+            document.getElementById('weekIndicator').textContent = `S${currentWeekOffset + 1}`;
+            
+            if (currentWeekOffset === 0) {
+                currentWeekOffset = Math.floor(plantAge / 7);
+            }
+            
+            for (let i = 0; i < 7; i++) {
+                const dayOffset = i + (currentWeekOffset * 7);
+                const dayDate = new Date(germDate);
+                dayDate.setDate(germDate.getDate() + dayOffset);
+                const dayOfWeek = dayDate.toLocaleDateString('pt-BR', { weekday: 'short' });
+                const dayAge = dayOffset + 1;
+                const dateStr = dayDate.toISOString().split('T')[0];
+                const isToday = dayDate.getTime() === today.getTime();
+                const phase = getPlantPhase(plant, dayDate.toISOString().split('T')[0]);
+                const phaseName = getPhaseName(phase);
+                const phaseClass = getPhaseClass(phase);
+                const wateringInfo = getWateringRecommendation(plant, dayAge, phase);
+                
+                const dayCard = document.createElement('div');
+                dayCard.className = `day-card ${isToday ? 'today' : ''}`;
+                dayCard.innerHTML = `
+                    ${isToday ? '<div class="current-day-indicator">Hoje</div>' : ''}
+                    <div class="day-header">
+                        <div class="day-number">Dia ${dayAge}</div>
+                        <div class="day-phase ${phaseClass}">${phaseName}</div>
+                    </div>
+                    <div class="watering-info">
+                        <div class="watering-status">
+                            <i class="fas fa-tint ${wateringInfo.watered ? 'watered-icon' : (wateringInfo.shouldWater ? 'watering-yes' : 'watering-no')}"></i>
+                            <span class="${wateringInfo.watered ? 'watering-yes' : (wateringInfo.shouldWater ? 'watering-yes' : 'watering-no')}">
+                                ${wateringInfo.watered ? wateringInfo.type : (wateringInfo.shouldWater ? 'Rega recomendada' : 'Sem rega hoje')}
+                            </span>
+                        </div>
+                        <div class="watering-values">
+                            <div>
+                                <span class="watering-label">pH:</span>
+                                <span class="watering-value">${wateringInfo.ph}</span>
+                            </div>
+                            <div>
+                                <span class="watering-label">EC:</span>
+                                <span class="watering-value">${wateringInfo.ec} mS/cm</span>
+                            </div>
+                            <div class="watering-npk">
+                                NPK: ${wateringInfo.npk}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.8rem; color: #b0b0b0;">
+                        ${dayOfWeek}, ${dayDate.toLocaleDateString('pt-BR')}
+                    </div>
+                    <button class="day-water-btn" data-date="${dateStr}">
+                        <i class="fas fa-tint"></i>
+                    </button>
+                `;
+                
+                const btn = dayCard.querySelector('.day-water-btn');
+                if (wateringInfo.watered) {
+                    btn.classList.add('watered');
+                    btn.innerHTML = `<i class="fas fa-check"></i>`;
+                } else {
+                    btn.classList.remove('watered');
+                    btn.innerHTML = `<i class="fas fa-tint"></i>`;
+                }
+                
+                calendarDays.appendChild(dayCard);
+            }
+        }
+
+        // Obter recomendações de rega baseadas na fase e idade da planta
+        function getWateringRecommendation(plant, dayAge, phase) {
+            const isAuto = plant.type === 'auto';
+            let shouldWater = false;
+            let ph = '6.0-6.5';
+            let ec = '1.0-1.2';
+            let npkValue = "";
+            
+            if (phase === "vegetative") {
+                npkValue = `${npkSettings.vegetative.n}-${npkSettings.vegetative.p}-${npkSettings.vegetative.k}`;
+            } 
+            else if (phase === "flowering") {
+                npkValue = `${npkSettings.flowering.n}-${npkSettings.flowering.p}-${npkSettings.flowering.k}`;
+            } 
+            else if (phase === "fruiting") {
+                npkValue = `${npkSettings.fruiting.n}-${npkSettings.fruiting.p}-${npkSettings.fruiting.k}`;
+            }
+            else {
+                npkValue = `${npkSettings.vegetative.n}-${npkSettings.vegetative.p}-${npkSettings.vegetative.k}`;
+            }
+            
+            shouldWater = dayAge % 2 === 0;
+            
+            switch(phase) {
+                case 'vegetative':
+                    ph = isAuto ? '5.8-6.2' : '5.8-6.3';
+                    ec = isAuto ? '0.8-1.2' : '1.0-1.4';
+                    break;
+                case 'preflower':
+                    ph = '5.8-6.2';
+                    ec = '1.2-1.6';
+                    break;
+                case 'flowering':
+                    ph = '6.0-6.5';
+                    ec = '1.4-1.8';
+                    break;
+                case 'fruiting':
+                    ph = '6.0-6.5';
+                    ec = '1.2-1.6';
+                    break;
+                default:
+                    ph = '6.0-6.5';
+                    ec = '1.0-1.4';
+            }
+            
+            const dayDate = new Date(plant.germinationDate);
+            dayDate.setDate(dayDate.getDate() + dayAge - 1);
+            const dayStr = dayDate.toISOString().split('T')[0];
+            
+            const wateringEntry = journalEntries.find(entry => 
+                entry.plantId === plant.id && 
+                entry.date === dayStr && 
+                entry.watering
+            );
+            
+            if (wateringEntry) {
+                return {
+                    watered: true,
+                    type: wateringEntry.watering,
+                    ph: wateringEntry.ph || ph,
+                    ec: wateringEntry.ec || ec,
+                    npk: npkValue
+                };
+            }
+            
+            return {
+                shouldWater,
+                ph,
+                ec,
+                npk: npkValue
+            };
+        }
+
+        // Atualizar navegação do carrossel
+        function updateCarouselNav() {
+            const navContainer = document.querySelector('.carousel-nav');
+            navContainer.innerHTML = '';
+            
+            for (let i = 0; i < totalPages; i++) {
+                const dot = document.createElement('div');
+                dot.className = `nav-dot ${i === currentPage ? 'active' : ''}`;
+                dot.dataset.page = i;
+                dot.addEventListener('click', () => {
+                    currentPage = i;
+                    updateCarouselPosition();
+                    updateCarouselNav();
+                });
+                navContainer.appendChild(dot);
+            }
+        }
+
+        // Atualizar posição do carrossel
+        function updateCarouselPosition() {
+            const plantList = document.getElementById("plantList");
+            const scrollPosition = currentPage * (220 + 15) * cardsPerPage;
+            plantList.scrollTo({
+                left: scrollPosition,
+                behavior: 'smooth'
+            });
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            document.getElementById('plantList').addEventListener('click', function(e) {
+                const card = e.target.closest('.plant-card');
+                if (card) {
+                    const plantId = card.dataset.id;
+                    const plant = plants.find(p => p.id === plantId);
+                    
+                    if (plant) {
+                        document.querySelectorAll('.plant-card').forEach(c => {
+                            c.classList.remove('selected');
+                        });
+                        card.classList.add('selected');
+                        currentWeekOffset = 0;
+                        const germDate = new Date(plant.germinationDate);
+                        const today = new Date();
+                        today.setHours(0,0,0,0);
+                        const plantAge = Math.floor((today - germDate) / (1000 * 60 * 60 * 24));
+                        currentWeekOffset = Math.floor(plantAge / 7);
+                        loadTimeline(plantId);
+                        selectedPlant = plant;
+                        renderWateringCalendar(plant);
+                        document.getElementById('plantNameTitle').textContent = plant.name;
+                    }
+                }
+                
+                if (e.target.closest('.delete-plant-btn')) {
+                    const btn = e.target.closest('.delete-plant-btn');
+                    const plantId = btn.dataset.id;
+                    deletePlant(plantId);
+                    return;
+                }
+                
+                if (e.target.closest('.edit-plant-btn')) {
+                    const btn = e.target.closest('.edit-plant-btn');
+                    const plantId = btn.dataset.id;
+                    editPlant(plantId);
+                    return;
+                }
+            });
+
+            document.querySelector('.prev-btn').addEventListener('click', () => {
+                const plantList = document.getElementById("plantList");
+                plantList.scrollBy({ left: -235, behavior: 'smooth' });
+            });
+
+            document.querySelector('.next-btn').addEventListener('click', () => {
+                const plantList = document.getElementById("plantList");
+                plantList.scrollBy({ left: 235, behavior: 'smooth' });
+            });
+
+            document.getElementById('prevWeekBtn').addEventListener('click', () => {
+                currentWeekOffset--;
+                if (selectedPlant) {
+                    renderWateringCalendar(selectedPlant);
+                }
+            });
+
+            document.getElementById('nextWeekBtn').addEventListener('click', () => {
+                currentWeekOffset++;
+                if (selectedPlant) {
+                    renderWateringCalendar(selectedPlant);
+                }
+            });
+
+            document.getElementById('calendarDays').addEventListener('click', function(e) {
+                const btn = e.target.closest('.day-water-btn');
+                if (btn) {
+                    const date = btn.dataset.date;
+                    openWateringModal(date);
+                }
+            });
+
+            document.querySelectorAll('.watering-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const type = this.dataset.type;
+                    markWatering(currentWateringDate, type);
+                    closeWateringModal();
+                });
+            });
+
+            document.getElementById('exportTimelineBtn').addEventListener('click', exportTimeline);
+            document.getElementById('addEventBtn').addEventListener('click', addNewEvent);
+            document.getElementById('addPlantBtn').addEventListener('click', addNewPlant);
+            document.getElementById('selectFolderBtn').addEventListener('click', selectDirectory);
+            document.getElementById('deleteEventBtn').addEventListener('click', deleteEvent);
+            document.getElementById('deletePlantBtn').addEventListener('click', deletePlantFromModal);
+            document.getElementById('eventForm').addEventListener('submit', saveEvent);
+            document.getElementById('eventImage').addEventListener('change', previewImage);
+            document.getElementById('plantForm').addEventListener('submit', savePlant);
+            document.getElementById('actionButtons').addEventListener('click', function(e) {
+                const button = e.target.closest('.action-button');
+                if (button) {
+                    button.classList.toggle('selected');
+                }
+            });
+            
+            document.getElementById('grantPermissionBtn').addEventListener('click', async () => {
+                const granted = await requestDirectoryAccess();
+                if (granted) {
+                    document.getElementById('permissionRequest').style.display = 'none';
+                    showStatusBar("Permissão concedida! As imagens serão salvas no sistema de arquivos.", 'success');
+                }
+            });
+            
+            document.getElementById('denyPermissionBtn').addEventListener('click', () => {
+                document.getElementById('permissionRequest').style.display = 'none';
+                showStatusBar("Permissão negada. As imagens serão salvas apenas temporariamente.", 'error');
+            });
+
+            document.getElementById('configBtn').addEventListener('click', openNPKModal);
+            document.getElementById('configureNPKBtn').addEventListener('click', openNPKModal);
+            document.getElementById('npkForm').addEventListener('submit', saveNPKSettings);
+            
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.event-menu-btn') && !e.target.closest('.event-menu')) {
+                    document.querySelectorAll('.event-menu').forEach(menu => {
+                        menu.style.display = 'none';
+                    });
+                }
+                
+                const menuBtn = e.target.closest('.event-menu-btn');
+                if (menuBtn) {
+                    const menu = menuBtn.nextElementSibling;
+                    document.querySelectorAll('.event-menu').forEach(m => {
+                        if (m !== menu) m.style.display = 'none';
+                    });
+                    menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+                }
+            });
+        }
+
+        // Função para selecionar pasta
+        function selectDirectory() {
+            savedDirectory = prompt("Digite o nome da pasta para salvar os dados:", savedDirectory) || savedDirectory;
+            localStorage.setItem('selectedDirectory', savedDirectory);
+            showStatusBar(`Pasta "${savedDirectory}" selecionada! Os dados serão salvos aqui.`, 'success');
+        }
+
+        // Função para deletar planta
+        function deletePlant(plantId) {
+            if (!confirm('Tem certeza que deseja excluir esta planta e todos os seus registros?')) {
+                return;
+            }
+            
+            const plantIndex = plants.findIndex(p => p.id === plantId);
+            if (plantIndex === -1) return;
+            plants.splice(plantIndex, 1);
+            
+            for (let i = journalEntries.length - 1; i >= 0; i--) {
+                if (journalEntries[i].plantId === plantId) {
+                    journalEntries.splice(i, 1);
+                }
+            }
+            
+            renderPlantList();
+            saveData();
+            
+            if (selectedPlant && selectedPlant.id === plantId) {
+                selectedPlant = null;
+                document.getElementById("timelineContainer").classList.remove('has-plant');
+                document.getElementById('timelineContainer').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-seedling"></i>
+                        <p>Selecione uma planta para visualizar sua linha do tempo</p>
+                        <p>Os eventos de cultivo serão exibidos aqui</p>
+                    </div>
+                `;
+                document.getElementById('plantNameTitle').textContent = '';
+            }
+            
+            showStatusBar('Planta excluída com sucesso!', 'success');
+        }
+
+        // Abrir modal para nova planta
+        function addNewPlant() {
+            document.getElementById('plantModalTitle').textContent = "Nova Planta";
+            document.getElementById('plantForm').reset();
+            document.getElementById('deletePlantBtn').style.display = 'none';
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('germinationDate').value = today;
+            document.getElementById('plantModal').style.display = 'flex';
+        }
+
+        // Abrir modal para editar planta
+        function editPlant(plantId) {
+            const plant = plants.find(p => p.id === plantId);
+            if (!plant) return;
+            
+            document.getElementById('plantModalTitle').textContent = "Editar Planta";
+            document.getElementById('plantId').value = plant.id;
+            document.getElementById('plantName').value = plant.name;
+            document.getElementById('germinationDate').value = plant.germinationDate;
+            document.getElementById('plantGenetics').value = plant.genetics || '';
+            
+            document.querySelectorAll('input[name="plantType"]').forEach(radio => {
+                radio.checked = (radio.value === plant.type);
+            });
+            
+            document.getElementById('deletePlantBtn').style.display = 'inline-block';
+            document.getElementById('deletePlantBtn').dataset.id = plantId;
+            document.getElementById('plantModal').style.display = 'flex';
+        }
+
+        // Fechar modal de planta
+        function closePlantModal() {
+            document.getElementById('plantModal').style.display = 'none';
+        }
+
+        // Salvar planta
+        function savePlant(e) {
+            e.preventDefault();
+
+            const plantId = document.getElementById('plantId').value;
+            const name = document.getElementById('plantName').value.trim();
+            const germinationDate = document.getElementById('germinationDate').value;
+            const genetics = document.getElementById('plantGenetics').value.trim();
+            const type = document.querySelector('input[name="plantType"]:checked').value;
+
+            if (!name || !germinationDate) {
+                alert("Preencha todos os campos obrigatórios!");
+                return;
+            }
+
+            if (plantId) {
+                const plantIndex = plants.findIndex(p => p.id === plantId);
+                if (plantIndex !== -1) {
+                    plants[plantIndex] = {
+                        ...plants[plantIndex],
+                        name,
+                        germinationDate,
+                        genetics: genetics || plants[plantIndex].genetics,
+                        type
+                    };
+                }
+            } else {
+                const newId = String(Date.now());
+                const newPlant = {
+                    id: newId,
+                    name,
+                    type,
+                    genetics: genetics || "Híbrida",
+                    germinationDate,
+                    createdAt: new Date().toISOString()
+                };
+                plants.push(newPlant);
+            }
+            
+            renderPlantList();
+            closePlantModal();
+            saveData();
+            showStatusBar(`Planta ${plantId ? 'atualizada' : 'salva'} com sucesso!`, 'success');
+        }
+
+        // Deletar planta a partir do modal
+        function deletePlantFromModal() {
+            const plantId = document.getElementById('deletePlantBtn').dataset.id;
+            closePlantModal();
+            deletePlant(plantId);
+        }
+
+        // Carregar linha do tempo
+        async function loadTimeline(plantId) {
+            const timelineContainer = document.getElementById("timelineContainer");
+            timelineContainer.innerHTML = "";
+            timelineContainer.classList.add('has-plant');
+            const plant = plants.find(p => p.id === plantId);
+            if (!plant) return;
+            const plantEntries = journalEntries.filter(entry => entry.plantId === plantId);
+            plantEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (plantEntries.length === 0) {
+                timelineContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-book-open"></i>
+                        <p>Nenhum evento registrado para esta planta</p>
+                        <p>Adicione eventos para acompanhar seu desenvolvimento</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const germDate = new Date(plant.germinationDate);
+            const ageInDays = Math.floor((today - germDate) / (1000 * 60 * 60 * 24));
+            const germinationEvent = {
+                id: "germination",
+                plantId: plant.id,
+                date: plant.germinationDate,
+                title: "Germinação",
+                description: "Semente plantada e início do processo de germinação",
+                icon: "fas fa-seedling",
+                iconClass: "vegetative-icon"
+            };
+            
+            const timelineEvents = [germinationEvent, ...plantEntries].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            for (const entry of timelineEvents) {
+                const eventDate = new Date(entry.date);
+                const formattedDate = eventDate.toLocaleDateString("pt-BR", { timeZone: 'America/Sao_Paulo' });
+                const daysSinceGermination = Math.floor((eventDate - germDate) / (1000 * 60 * 60 * 24));
+                const isCurrent = eventDate.getTime() === today.getTime();
+                const phase = getPlantPhase(plant, entry.date);
+                const phaseName = getPhaseName(phase);
+                const phaseClass = getPhaseClass(phase);
+                let actionsHtml = "";
+                
+                if (entry.action) {
+                    actionsHtml = `
+                        <div class="actions-container">
+                            ${entry.action.split(", ").map(action => {
+                                let iconClass = "";
+                                if (action === "Poda FIM") iconClass = "fas fa-cut";
+                                else if (action === "Poda Top") iconClass = "fas fa-cut";
+                                else if (action === "LST") iconClass = "fas fa-vine";
+                                else if (action === "SCROG") iconClass = "fas fa-border-all";
+                                else if (action === "Transplante") iconClass = "fas fa-seedling";
+                                else if (action === "Defoliação") iconClass = "fas fa-leaf";
+                                else iconClass = "fas fa-tasks";
+                                return `<div class="action-chip" data-action="${action}">
+                                    <i class="${iconClass}"></i> ${action}
+                                </div>`;
+                            }).join("")}
+                        </div>
+                    `;
+                }
+                
+                let detailsHtml = "";
+                if (entry.ph || entry.ec || entry.temperature || entry.humidity || entry.watering) {
+                    detailsHtml = `
+                        <div class="event-details">
+                            ${entry.ph ? `<div class="detail-item"><div class="detail-label">pH</div><div class="detail-value">${entry.ph}</div></div>` : ""}
+                            ${entry.ec ? `<div class="detail-item"><div class="detail-label">EC (mS/cm)</div><div class="detail-value">${entry.ec}</div></div>` : ""}
+                            ${entry.temperature ? `<div class="detail-item"><div class="detail-label">Temperatura</div><div class="detail-value">${entry.temperature}°C</div></div>` : ""}
+                            ${entry.humidity ? `<div class="detail-item"><div class="detail-label">Umidade</div><div class="detail-value">${entry.humidity}%</div></div>` : ""}
+                            ${entry.watering ? `<div class="detail-item"><div class="detail-label">Tipo de Rega</div><div class="detail-value">${entry.watering}</div></div>` : ""}
+                        </div>
+                    `;
+                }
+                
+                let imagesHtml = "";
+                let imageUrl = "";
+                
+                if (entry.imageFileName && permissionGranted) {
+                    imageUrl = await loadImageFromFileSystem(entry.imageFileName);
+                }
+                
+                if (!imageUrl && entry.imageData) {
+                    imageUrl = entry.imageData;
+                }
+                
+                if (imageUrl) {
+                    imagesHtml = `<div class="event-images"><img src="${imageUrl}" class="event-image" alt="Imagem do evento"></div>`;
+                }
+                
+                const eventElement = document.createElement("div");
+                eventElement.className = "timeline-event";
+                eventElement.innerHTML = `
+                    <div class="event-card ${isCurrent ? "current" : ""}">
+                        <div class="event-actions">
+                            <button class="event-menu-btn">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="event-menu">
+                                <button class="edit-event-btn" data-id="${entry.id}">Editar</button>
+                                <button class="delete-event-btn" data-id="${entry.id}">Excluir</button>
+                            </div>
+                        </div>
+                        <div class="event-header">
+                            <div class="event-icon ${entry.iconClass || "action-icon"}">
+                                <i class="${entry.icon || "fas fa-clipboard-list"}"></i>
+                            </div>
+                            <div class="event-date">${formattedDate}</div>
+                        </div>
+                        <div class="event-title">${entry.title || "Registro"}</div>
+                        <div class="event-phase ${phaseClass}">${phaseName}</div>
+                        ${actionsHtml}
+                        <div class="event-description">${entry.description || entry.notes || "Sem descrição"}</div>
+                        ${detailsHtml}
+                        ${imagesHtml}
+                        <div style="margin-top: 15px; font-size: 0.95rem; color: #b0b0b0;">
+                            <i class="fas fa-calendar-day"></i> Dia ${daysSinceGermination} de crescimento
+                        </div>
+                    </div>
+                `;
+                
+                timelineContainer.appendChild(eventElement);
+                
+                if (imagesHtml) {
+                    const img = eventElement.querySelector(".event-image");
+                    if (img) {
+                        img.addEventListener("click", () => {
+                            document.getElementById("modalImage").src = img.src;
+                            document.getElementById("imageModal").style.display = "flex";
+                        });
+                    }
+                }
+                
+                eventElement.querySelector('.edit-event-btn').addEventListener('click', function() {
+                    editEvent(this.dataset.id);
+                });
+                
+                eventElement.querySelector('.delete-event-btn').addEventListener('click', function() {
+                    deleteEvent(this.dataset.id);
+                });
+            }
+            
+            const todayEvent = document.createElement("div");
+            todayEvent.className = "timeline-event";
+            todayEvent.innerHTML = `
+                <div class="event-card current">
+                    <div class="event-header">
+                        <div class="event-icon action-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="event-date">Hoje</div>
+                    </div>
+                    <div class="event-title">Estado Atual</div>
+                    <div class="event-description">Esta é a situação atual da planta</div>
+                    <div style="margin-top: 15px; font-size: 0.95rem; color: #b0b0b0;">
+                        <i class="fas fa-calendar-day"></i> Dia ${ageInDays} de crescimento
+                    </div>
+                </div>
+            `;
+            timelineContainer.appendChild(todayEvent);
+        }
+
+        // Determinar fase da planta com períodos de transição
+        function getPlantPhase(plant, entryDate) {
+            if (!plant.germinationDate) return "";
+            const germDate = new Date(plant.germinationDate);
+            const refDate = entryDate ? new Date(entryDate) : new Date();
+            const ageInDays = Math.floor((refDate - germDate) / (1000 * 60 * 60 * 24));
+            
+            if (plant.type === "auto") {
+                if (ageInDays < 30) return "vegetative";
+                if (ageInDays < 35) return "transition";
+                if (ageInDays < 50) return "flowering";
+                if (ageInDays < 55) return "transition";
+                if (ageInDays < 65) return "fruiting";
+                return "harvest";
+            } else {
+                if (ageInDays < 30) return "vegetative";
+                if (ageInDays < 37) return "transition";
+                if (ageInDays < 49) return "preflower";
+                if (ageInDays < 84) return "flowering";
+                if (ageInDays < 99) return "transition";
+                if (ageInDays < 112) return "fruiting";
+                return "harvest";
+            }
+        }
+
+        // Obter nome da fase
+        function getPhaseName(phase) {
+            switch(phase) {
+                case "vegetative": return "Fase Vegetativa";
+                case "preflower": return "Pré-Floração";
+                case "flowering": return "Floração";
+                case "fruiting": return "Frutificação";
+                case "harvest": return "Colheita";
+                case "transition": return "Período de Transição";
+                default: return "Germinação";
+            }
+        }
+
+        // Obter classe CSS da fase
+        function getPhaseClass(phase) {
+            switch(phase) {
+                case "vegetative": return "phase-vegetative";
+                case "preflower": return "phase-preflower";
+                case "flowering": return "phase-flowering";
+                case "fruiting": return "phase-fruiting";
+                case "transition": return "phase-transition";
+                default: return "";
+            }
+        }
+
+        // Exportar linha do tempo
+        function exportTimeline() {
+            if (!selectedPlant) {
+                alert("Selecione uma planta primeiro");
+                return;
+            }
+            
+            alert("Exportação para PDF iniciada!\n(Em uma implementação real, isso geraria um PDF com todos os dados da linha do tempo)");
+            document.getElementById("exportTimelineBtn").innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando PDF...';
+            setTimeout(() => {
+                document.getElementById("exportTimelineBtn").innerHTML = '<i class="fas fa-file-pdf"></i> Exportar PDF';
+                alert("PDF gerado com sucesso!");
+            }, 2000);
+        }
+
+        // Abrir modal de novo evento
+        function addNewEvent() {
+            if (!selectedPlant) {
+                alert("Selecione uma planta primeiro");
+                return;
+            }
+            
+            document.getElementById('eventModalTitle').textContent = "Adicionar Registro";
+            document.getElementById('eventId').value = '';
+            document.getElementById('deleteEventBtn').style.display = 'none';
+            const today = new Date();
+            document.getElementById('eventDate').value = today.toISOString().split('T')[0];
+            document.getElementById('eventForm').reset();
+            document.getElementById('imagePreview').innerHTML = '';
+            document.querySelectorAll('.action-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.getElementById('eventModal').style.display = 'flex';
+        }
+
+        // Abrir modal para editar evento
+        function editEvent(eventId) {
+            const event = journalEntries.find(e => e.id === eventId);
+            if (!event) return;
+            
+            document.getElementById('eventModalTitle').textContent = "Editar Registro";
+            document.getElementById('eventId').value = event.id;
+            document.getElementById('eventDate').value = event.date;
+            document.getElementById('ph').value = event.ph || '';
+            document.getElementById('ec').value = event.ec || '';
+            document.getElementById('temperature').value = event.temperature || '';
+            document.getElementById('humidity').value = event.humidity || '';
+            document.getElementById('wateringType').value = event.watering || '';
+            document.getElementById('notes').value = event.notes || '';
+            
+            document.querySelectorAll('.action-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            if (event.action) {
+                event.action.split(", ").forEach(action => {
+                    const actionButton = [...document.querySelectorAll('.action-button')]
+                        .find(btn => btn.dataset.action === action);
+                    if (actionButton) {
+                        actionButton.classList.add('selected');
+                    }
+                });
+            }
+            
+            if (event.imageData) {
+                document.getElementById('imagePreview').innerHTML = `
+                    <img src="${event.imageData}" alt="Preview da imagem" style="max-width: 100%; border-radius: 8px; margin-top: 10px;">
+                `;
+            }
+            
+            document.getElementById('deleteEventBtn').style.display = 'inline-block';
+            document.getElementById('deleteEventBtn').dataset.id = eventId;
+            document.getElementById('eventModal').style.display = 'flex';
+        }
+
+        // Deletar evento
+        function deleteEvent(eventId) {
+            if (!confirm('Tem certeza que deseja excluir este registro?')) {
+                return;
+            }
+            
+            const eventIndex = journalEntries.findIndex(e => e.id === eventId);
+            if (eventIndex !== -1) {
+                journalEntries.splice(eventIndex, 1);
+                if (selectedPlant) {
+                    loadTimeline(selectedPlant.id);
+                    renderWateringCalendar(selectedPlant);
+                }
+                closeEventModal();
+                saveData();
+                showStatusBar('Registro excluído com sucesso!', 'success');
+            }
+        }
+
+        // Preview de imagem antes de salvar
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('imagePreview');
+                preview.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview da imagem" style="max-width: 100%; border-radius: 8px; margin-top: 10px;">
+                `;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Validar data do evento
+        function validateEventDate(dateStr) {
+            if (!selectedPlant) return false;
+            const eventDate = new Date(dateStr);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (eventDate > today) {
+                showValidationError('eventDate', 'Não é possível registrar eventos no futuro');
+                return false;
+            }
+            
+            const germDate = new Date(selectedPlant.germinationDate);
+            if (eventDate < germDate) {
+                showValidationError('eventDate', 'A data não pode ser anterior à germinação');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Salvar evento
+        async function saveEvent(e) {
+            e.preventDefault();
+            
+            if (!selectedPlant) {
+                alert("Selecione uma planta primeiro");
+                return;
+            }
+            
+            resetValidationErrors();
+            const eventDate = document.getElementById('eventDate').value;
+            if (!validateEventDate(eventDate)) {
+                return;
+            }
+            
+            const eventId = document.getElementById('eventId').value;
+            const ph = document.getElementById('ph').value;
+            const ec = document.getElementById('ec').value;
+            const temperature = document.getElementById('temperature').value;
+            const humidity = document.getElementById('humidity').value;
+            const wateringType = document.getElementById('wateringType').value;
+            const notes = document.getElementById('notes').value;
+            const actions = Array.from(document.querySelectorAll('.action-button.selected'))
+                         .map(btn => btn.dataset.action);
+            let imageFileName = null;
+            let imageData = null;
+            const fileInput = document.getElementById('eventImage');
+            
+            if (fileInput.files.length > 0) {
+                const imageFile = fileInput.files[0];
+                if (permissionGranted) {
+                    imageFileName = await saveImageToFileSystem(imageFile);
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imageData = e.target.result;
+                };
+                reader.readAsDataURL(imageFile);
+            }
+            
+            if (eventId) {
+                const eventIndex = journalEntries.findIndex(e => e.id === eventId);
+                if (eventIndex !== -1) {
+                    journalEntries[eventIndex] = {
+                        ...journalEntries[eventIndex],
+                        date: eventDate,
+                        ph: ph || undefined,
+                        ec: ec || undefined,
+                        temperature: temperature || undefined,
+                        humidity: humidity || undefined,
+                        watering: wateringType || undefined,
+                        action: actions.join(', ') || undefined,
+                        notes: notes || undefined,
+                        imageFileName: imageFileName || journalEntries[eventIndex].imageFileName,
+                        imageData: imageData || journalEntries[eventIndex].imageData
+                    };
+                }
+            } else {
+                const newId = String(Date.now());
+                const newEvent = {
+                    id: newId,
+                    plantId: selectedPlant.id,
+                    date: eventDate,
+                    ph: ph || undefined,
+                    ec: ec || undefined,
+                    temperature: temperature || undefined,
+                    humidity: humidity || undefined,
+                    watering: wateringType || undefined,
+                    action: actions.join(', ') || undefined,
+                    notes: notes || undefined,
+                    imageFileName: imageFileName,
+                    imageData: imageData,
+                    createdAt: new Date().toISOString()
+                };
+                journalEntries.push(newEvent);
+            }
+            
+            if (selectedPlant) {
+                loadTimeline(selectedPlant.id);
+                renderWateringCalendar(selectedPlant);
+            }
+            closeEventModal();
+            saveData();
+            showStatusBar(`Registro ${eventId ? 'atualizado' : 'salvo'} com sucesso!`, 'success');
+        }
+
+        // Fechar modal de evento
+        function closeEventModal() {
+            document.getElementById('eventModal').style.display = 'none';
+        }
+
+        // Fechar modal de imagem
+        function closeImageModal() {
+            document.getElementById("imageModal").style.display = "none";
+        }
+        
+        // Salvar dados no localStorage
+        function saveData() {
+            localStorage.setItem('plants', JSON.stringify(plants));
+            localStorage.setItem('journalEntries', JSON.stringify(journalEntries));
+            localStorage.setItem('savedDirectory', savedDirectory);
+            localStorage.setItem('npkSettings', JSON.stringify(npkSettings));
+        }
+
+        // Carregar dados
+        async function loadData() {
+            const savedPlants = localStorage.getItem('plants');
+            const savedEntries = localStorage.getItem('journalEntries');
+            const savedDir = localStorage.getItem('savedDirectory');
+            const savedNPK = localStorage.getItem('npkSettings');
+            
+            if (savedPlants) plants = JSON.parse(savedPlants);
+            if (savedEntries) journalEntries = JSON.parse(savedEntries);
+            if (savedDir) savedDirectory = savedDir;
+            if (savedNPK) npkSettings = JSON.parse(savedNPK);
+            
+            const savedNPKFromDB = await loadNPKSettingsFromDB();
+            if (savedNPKFromDB) {
+                npkSettings = savedNPKFromDB;
+            } else if (!savedNPK) {
+                npkSettings = {
+                    vegetative: { n: 10, p: 5, k: 5 },
+                    flowering: { n: 5, p: 10, k: 15 },
+                    fruiting: { n: 3, p: 12, k: 18 }
+                };
+                await saveNPKSettingsToDB(npkSettings);
+            }
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadData();
+            const hasPermission = await initFileSystem();
+            
+            if (!hasPermission) {
+                document.getElementById('permissionRequest').style.display = 'flex';
+            }
+            
+            if (plants.length === 0 && journalEntries.length === 0) {
+                plants = [
+                    {
+                        id: "1",
+                        name: "Purple Haze #1",
+                        type: "auto",
+                        genetics: "Sativa",
+                        germinationDate: "2023-08-15",
+                        createdAt: "2023-08-10T12:00:00Z"
+                    },
+                    {
+                        id: "2",
+                        name: "Northern Lights",
+                        type: "photo",
+                        genetics: "Índica",
+                        germinationDate: "2023-09-01",
+                        createdAt: "2023-08-25T12:00:00Z"
+                    }
+                ];
+                
+                journalEntries = [
+                    {
+                        id: "101",
+                        plantId: "1",
+                        date: "2023-08-22",
+                        ph: "6.2",
+                        ec: "1.2",
+                        temperature: "24.5",
+                        humidity: "65",
+                        watering: "Fertilizante mineral",
+                        action: "Poda FIM, Transplante",
+                        notes: "Planta apresentando bom desenvolvimento com crescimento vigoroso",
+                        imageData: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+                        createdAt: "2023-08-22T14:30:00Z"
+                    },
+                    {
+                        id: "102",
+                        plantId: "1",
+                        date: "2023-09-05",
+                        ph: "6.0",
+                        ec: "1.8",
+                        temperature: "25.0",
+                        humidity: "60",
+                        watering: "Fertilizante organo-mineral",
+                        action: "LST, Defoliação",
+                        notes: "Iniciando fase de floração com formação de pré-flores",
+                        imageData: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+                        createdAt: "2023-09-05T10:15:00Z"
+                    }
+                ];
+                saveData();
+            }
+            
+            renderPlantList();
+            setupEventListeners();
+            updateCarouselNav();
+            setTodayAsDefaultDate();
+            window.addEventListener('beforeunload', saveData);
+
+            // Registrar o Service Worker para PWA
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.register('/service-worker.js');
+                    console.log('Service Worker registrado com sucesso no escopo:', registration.scope);
+                } catch (error) {
+                    console.error('Falha ao registrar o Service Worker:', error);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
