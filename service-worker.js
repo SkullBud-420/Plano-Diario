@@ -15,11 +15,10 @@ const urlsToCache = [
 self.addEventListener('install', event => {
   // Realiza os passos de instalação
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Cache aberto');
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then(cache => {
+      console.log('Cache aberto, adicionando URLs ao cache');
+      return cache.addAll(urlsToCache);
+    }).then(() => self.skipWaiting()) // Força o novo service worker a se tornar ativo imediatamente.
   );
 });
 
@@ -36,8 +35,8 @@ self.addEventListener('activate', event => {
             return caches.delete(cacheName);
           }
         })
-      );
-    })
+      )
+    ).then(() => self.clients.claim()) // Garante que o SW controle a página imediatamente.
   );
 });
 
