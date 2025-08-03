@@ -3,10 +3,10 @@
   "short_name": "Skull Bud 420",
   "description": "Plano Diário de Cultivo Avançado para acompanhar suas plantas.",
   "start_url": "./Skull Bud 420 - Diário 0.1.html",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#000000",
   "theme_color": "#2c3e50",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "icons": [
     {
       "src": "images/icons/icon-192x192.png",
@@ -18,5 +18,6 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "lang": "pt"
 }
