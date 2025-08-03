@@ -3,10 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skull Bud 420 - Diário de Cultivo</title>
+    <title>Diário de Cultivo Avançado</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="manifest" href="/manifest.json">
+    <!-- Manifest PWA -->
+    <!-- Bibliotecas para Exportação de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Biblioteca para arrastar e soltar (SortableJS) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2c3e50">
+    
     <style>
         :root {
             --primary: #2c3e50;
@@ -163,6 +170,24 @@
             background: rgb(0, 0, 0);
         }
 
+        /* Estilos para arrastar e soltar (SortableJS) */
+        .plant-card.sortable-ghost {
+            opacity: 0.4;
+            background: var(--secondary);
+        }
+
+        .plant-card.sortable-chosen {
+            cursor: grabbing;
+        }
+
+        /* Novo: Estilo para o handle de arrastar */
+        .plant-drag-handle {
+            cursor: grab;
+            color: #aaa;
+            margin-right: 10px;
+            touch-action: none; /* Impede o scroll ao tocar no handle */
+        }
+
         .plant-card.selected {
             border: 4px solid var(--secondary);
             transform: translateY(-5px);
@@ -182,6 +207,12 @@
             font-size: 0.9rem;
             color: #b0b0b0;
             margin-bottom: 8px;
+        }
+
+        .plant-details i {
+            margin-right: 6px;
+            width: 14px;
+            text-align: center;
         }
 
         .germination-date {
@@ -234,11 +265,6 @@
             background: rgba(243, 18, 157, 0.768);
             color: #d9a0fa;
             border: 1px solid rgba(228, 18, 243, 0.5);
-        }
-        .phase-transition {
-            background: rgba(52, 152, 219, 0.3);
-            color: #aed6f1;
-            border: 1px solid rgba(52, 152, 219, 0.5);
         }
 
         .type-auto {
@@ -364,7 +390,7 @@
 
         .plant-card-btn:hover {
             transform: scale(1.1);
-            background: rgba(255, 255, 255, 0.2);
+            background: rgb(0, 0, 0);
         }
 
         .timeline-section {
@@ -516,9 +542,6 @@
         .fruiting-icon {
             background: var(--fruiting);
         }
-        .transition-icon {
-            background: var(--transition);
-        }
         .action-icon {
             background: var(--secondary);
         }
@@ -560,10 +583,6 @@
             background: rgba(168, 18, 243, 0.312);
             color: #fad7a0;
         }
-        .phase-transition {
-            background: rgba(52, 152, 219, 0.3);
-            color: #aed6f1;
-        }
 
         .event-description {
             color: #b0b0b0;
@@ -582,6 +601,31 @@
             margin-bottom: 18px;
             border-left: 4px solid var(--secondary);
         }
+
+        /* Novo: Estilo para info de setup dentro de um evento */
+        .event-setup-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #c0c0c0;
+            border-left: 3px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .event-setup-info div {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .event-setup-info i.fa-lightbulb { color: #f1c40f; }
+        .event-setup-info i.fa-home { color: #3498db; }
+        .event-setup-info i.fa-clock { color: #95a5a6; } /* Cor para o ícone de duração */
+        .event-setup-info i.fa-hourglass-half { color: #e67e22; } /* Laranja para tempo de luz */
 
         .detail-item {
             flex: 1 1 120px;
@@ -1240,7 +1284,7 @@
         .day-card.today {
             border-left-color: var(--secondary);
             transform: scale(1.05);
-            background: rgba(40, 50, 45, 0.95);
+            background: rgba(40, 50, 45, 0.439);
         }
 
         .day-card:hover {
@@ -1289,13 +1333,20 @@
         }
 
         .watering-no {
-            color: var(--danger);
+            color: #95a5a6; /* Alterado de var(--danger) para cinza */
         }
 
         .watering-values {
             margin-top: 8px;
             font-size: 0.85rem;
         }
+
+        /* Novas cores para tipos de rega */
+        .watered-type-agua { color: #3498db !important; } /* Azul para água */
+        .watered-type-fertilizante-mineral { color: #f1c40f !important; } /* Amarelo para mineral */
+        .watered-type-fertilizante-organo-mineral { color: #e67e22 !important; } /* Laranja para organo-mineral */
+        .watered-type-fertilizante-organico { color: #2ecc71 !important; } /* Verde claro para orgânico */
+        .watered-type-flush { color: #9b59b6 !important; } /* Roxo para flush */
 
         .watering-values div {
             display: flex;
@@ -1312,18 +1363,21 @@
 
         .current-day-indicator {
             position: absolute;
-            top: -8px;
-            right: -8px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
+            top: -4px;
+            left: 80%;
+            transform: translateX(-50%);
+            width: auto;
+            height: auto;
+            padding: 2px 10px;
+            border-radius: 20px;
             background: var(--secondary);
+            color: rgb(255, 255, 255);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 0.7rem;
             font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.445);
         }
 
         @media (max-width: 768px) {
@@ -1565,6 +1619,145 @@
             position: relative;
         }
 
+        /* Novos estilos para o container de setup */
+        .setup-container {
+            display: flex;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .setup-info div {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+
+        /* Estilos para a lista de setups no modal */
+        .setup-list-item {
+            background: rgba(30, 40, 35, 0.7);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid var(--warning);
+        }
+
+        .setup-item-details h4 {
+            margin: 0 0 5px 0;
+            color: white;
+        }
+
+        .setup-item-details p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #b0b0b0;
+        }
+
+        .setup-item-actions button {
+            background: none;
+            border: none;
+            color: #b0b0b0;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-left: 10px;
+            transition: color 0.2s ease;
+        }
+
+        .setup-item-actions button:hover {
+            color: white;
+        }
+
+        /* Estilos para o Modal de Configuração com Abas */
+        .config-tabs {
+            display: flex;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .config-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #b0b0b0;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .config-tab:hover {
+            color: white;
+        }
+
+        .config-tab.active {
+            color: var(--secondary);
+            border-bottom-color: var(--secondary);
+        }
+
+        .config-tab-content {
+            display: none;
+        }
+
+        .config-tab-content.active {
+            display: block;
+        }
+
+        /* Estilos para o Modal de Informações da Planta */
+        #plantInfoContent {
+            color: #e0e0e0;
+        }
+
+        .info-section {
+            background: rgb(0, 0, 0);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .info-section h3 {
+            color: var(--secondary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .info-item {
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .info-item .label {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .info-item .value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .info-list ul { list-style: none; padding: 0; }
+        .info-list li { padding: 8px 0; border-bottom: 1px solid rgb(0, 0, 0); display: flex; justify-content: space-between; align-items: center; }
+        .info-list li:last-child { border-bottom: none; }
+        .info-list li strong { 
+            font-size: 1.1rem;
+            color: var(--secondary);
+        }
         /* Modal de seleção de rega */
         .watering-modal {
             display: none;
@@ -1586,7 +1779,6 @@
             border-radius: 15px;
             padding: 25px;
             position: relative;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
         }
 
         .watering-options {
@@ -1616,6 +1808,171 @@
             margin-bottom: 8px;
             display: block;
         }
+
+        /* Galeria de Fotos */
+        .photo-gallery {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .photo-gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .photo-gallery-title {
+            font-size: 1.2rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .photo-grid {
+            display: flex;
+            overflow-x: auto;
+            gap: 15px;
+            padding: 10px 0;
+            scrollbar-width: none; /* Oculta a barra de rolagem no Firefox */
+        }
+
+        .photo-grid::-webkit-scrollbar {
+            display: none; /* Oculta a barra de rolagem no Chrome, Safari, etc. */
+        }
+
+        .photo-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 80px; /* Largura fixa para o carrossel */
+            height: 80px;
+            flex-shrink: 0; /* Impede que os itens encolham */
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .photo-item:hover img {
+            transform: scale(1.05);
+        }
+
+        /* Modal de Galeria Ampliada */
+        .gallery-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gallery-modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 800px;
+            height: 90%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .gallery-main-image {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gallery-main-image img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .gallery-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .gallery-nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .gallery-nav-btn:hover {
+            background: var(--secondary);
+        }
+
+        .gallery-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            color: black;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gallery-thumbnails {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .gallery-thumbnail {
+            width: 80px;  /* Ajuste a largura aqui */
+            height: 80px; /* Ajuste a altura aqui */
+            border-radius: 5px;
+            overflow: hidden;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .gallery-thumbnail.active {
+            opacity: 1;
+            border: 2px solid var(--secondary);
+        }
+
+        .gallery-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body>
@@ -1626,10 +1983,14 @@
                 <i class="fas fa-flask"></i>
             </button>
             <h1><i class="fas fa-skull"></i> Skull Bud 420</h1>
-            <p class="subtitle">Diário de Cultivo</p>
+            <p class="subtitle">Plano Diário</p>
         </header>
 
-        
+        <div class="environments-summary" id="environmentsSummary">
+            <!-- Conteúdo gerado por JS -->
+        </div>
+
+
 
         <div class="plant-selector">
             <div class="selector-title">
@@ -1697,9 +2058,22 @@
                     </button>
                 </div>
             </div>
-<button class="action-btn add-btn" id="addEventBtn">
+            <button class="action-btn add-btn" id="addEventBtn">
                 <i class="fas fa-plus"></i> Adicionar Novo Evento
             </button>
+
+            <!-- Galeria de Fotos -->
+            <div class="photo-gallery" id="photoGallery">
+                <div class="photo-gallery-header">
+                    <h3 class="photo-gallery-title">
+                        <i class="fas fa-images"></i> Fotos
+                    </h3>
+                </div>
+                <div class="photo-grid" id="photoGrid">
+                    <!-- Fotos serão carregadas aqui -->
+                </div>
+            </div>
+
             <div class="timeline-container" id="timelineContainer">
                 <div class="empty-state">
                     <i class="fas fa-seedling"></i>
@@ -1707,8 +2081,6 @@
                     <p>Os eventos de cultivo serão exibidos aqui</p>
                 </div>
             </div>
-
-            
         </div>
     </div>
 
@@ -1717,6 +2089,24 @@
         <div class="image-modal-content">
             <button class="image-close-modal" onclick="closeImageModal()">×</button>
             <img id="modalImage" src="" />
+        </div>
+    </div>
+
+    <!-- Modal de Galeria Ampliada -->
+    <div id="galleryModal" class="gallery-modal">
+        <div class="gallery-modal-content">
+            <button class="gallery-close" onclick="closeGalleryModal()">×</button>
+            <div class="gallery-main-image">
+                <img id="galleryMainImage" src="" alt="Imagem ampliada">
+            </div>
+            <div class="gallery-nav">
+                <button class="gallery-nav-btn" id="prevPhotoBtn"><i class="fas fa-chevron-left"></i> Anterior</button>
+                <span id="galleryPhotoInfo"></span>
+                <button class="gallery-nav-btn" id="nextPhotoBtn">Próxima <i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="gallery-thumbnails" id="galleryThumbnails">
+                <!-- Miniaturas serão adicionadas aqui -->
+            </div>
         </div>
     </div>
 
@@ -1777,6 +2167,14 @@
                             <i class="fas fa-cut"></i>
                             <div class="action-label">Poda Top</div>
                         </div>
+                         <div class="action-button" data-action="Defoliação">
+                            <i class="fas fa-leaf"></i>
+                            <div class="action-label">Defoliação</div>
+                        </div>
+                          <div class="action-button" data-action="Transplante">
+                            <i class="fas fa-seedling"></i>
+                            <div class="action-label">Transplante</div>
+                        </div>
                         <div class="action-button" data-action="LST">
                             <i class="fas fa-vine"></i>
                             <div class="action-label">LST</div>
@@ -1785,17 +2183,30 @@
                             <i class="fas fa-border-all"></i>
                             <div class="action-label">SCROG</div>
                         </div>
-                        <div class="action-button" data-action="Transplante">
-                            <i class="fas fa-seedling"></i>
-                            <div class="action-label">Transplante</div>
+                        <div class="action-button" data-action="Controle de Praga">
+                            <i class="fas fa-bug"></i>
+                            <div class="action-label">Controle de Praga</div>
                         </div>
-                        <div class="action-button" data-action="Defoliação">
-                            <i class="fas fa-leaf"></i>
-                            <div class="action-label">Defoliação</div>
+                        <div class="action-button" data-action="Colheita">
+                            <i class="fas fa-cannabis"></i>
+                            <div class="action-label">Colheita</div>
                         </div>
                     </div>
                 </div>
                 
+                <div id="harvestFields" class="form-group" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="wetWeight">Peso Úmido (g)</label>
+                            <input type="number" id="wetWeight" step="0.1" min="0" placeholder="Ex: 150.5">
+                        </div>
+                        <div class="form-group">
+                            <label for="dryWeight">Peso Seco (g)</label>
+                            <input type="number" id="dryWeight" step="0.1" min="0" placeholder="Ex: 35.2">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label for="notes">Observações</label>
                     <textarea id="notes" rows="3" placeholder="Descreva o desenvolvimento da planta..."></textarea>
@@ -1831,12 +2242,18 @@
                     <input type="text" id="plantName" placeholder="Ex: Gorilla Glue" required>
                 </div>
                 <div class="form-group">
+                    <label for="plantGenetics">Genética / Strain</label>
+                    <input type="text" id="plantGenetics" placeholder="Ex: Sativa Dominante, Híbrida, etc.">
+                </div>
+                <div class="form-group">
                     <label for="germinationDate">Data da Germinação</label>
                     <input type="date" id="germinationDate" required>
                 </div>
-                <div class="form-group">
-                    <label for="plantGenetics">Genética</label>
-                    <input type="text" id="plantGenetics" placeholder="Ex: Sativa Híbrida">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="plantSetup">Setup (Ambiente/Iluminação)</label>
+                        <select id="plantSetup" required></select>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Tipo de Planta</label>
@@ -1861,7 +2278,57 @@
             </form>
         </div>
     </div>
+
+    <!-- Modal para Mudança de Fase -->
+    <div id="phaseChangeModal" class="event-modal">
+        <div class="event-modal-content">
+            <h2><i class="fas fa-sync-alt"></i> Mudar Fase da Planta</h2>
+            <form id="phaseChangeForm">
+                <input type="hidden" id="phaseChangePlantId">
+                <div class="form-group">
+                    <label>Fase Atual</label>
+                    <p id="currentPhaseText" style="font-size: 1.1rem; font-weight: bold;"></p>
+                </div>
+                <div class="form-group">
+                    <label for="newPhaseSelect">Selecione a Nova Fase</label>
+                    <select id="newPhaseSelect" required>
+                        <option value="vegetative">Vegetativo</option>
+                        <option value="preflower">Pré-floração</option>
+                        <option value="flowering">Floração</option>
+                        <option value="fruiting">Frutificação</option>
+                        <option value="harvest">Colheita</option>
+                    </select>
+                </div>
+                 <div class="form-group">
+                    <label for="phaseChangeDate">Data da Mudança</label>
+                    <input type="date" id="phaseChangeDate" required>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-btn cancel" onclick="closePhaseChangeModal()">Cancelar</button>
+                    <button type="submit" class="modal-btn save">Salvar Mudança</button>
+                </div>
+            </form>
+        </div>
+    </div>
     
+    <!-- Modal para mudança de setup -->
+    <div id="setupChangeModal" class="event-modal">
+        <div class="event-modal-content">
+            <h2><i class="fas fa-cogs"></i> Mudar Setup da Planta</h2>
+            <form id="setupChangeForm">
+                <input type="hidden" id="setupChangePlantId">
+                 <div class="form-group">
+                    <label for="newPlantSetupSelect">Selecione o Novo Setup</label>
+                    <select id="newPlantSetupSelect" required></select>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-btn cancel" onclick="closeSetupChangeModal()">Cancelar</button>
+                    <button type="submit" class="modal-btn save">Salvar Mudança</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal para permissão de sistema de arquivos -->
     <div id="permissionRequest" class="permission-request" style="display: none;">
         <div class="permission-content">
@@ -1908,6 +2375,48 @@
         </div>
     </div>
 
+
+    <!-- Modal para Pré-visualização de PDF -->
+    <div id="pdfPreviewModal" class="event-modal">
+        <div class="event-modal-content" style="max-width: 90%; width: 800px; height: 95vh; display: flex; flex-direction: column;">
+            <h2 style="flex-shrink: 0;"><i class="fas fa-file-pdf"></i> Pré-visualização do PDF</h2>
+            <div id="pdfPreviewContainer" style="flex-grow: 1; background: #555; border-radius: 8px; overflow: hidden;">
+                <iframe id="pdfPreviewFrame" style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+            <div class="modal-buttons" style="flex-shrink: 0;">
+                <button type="button" class="modal-btn cancel" onclick="closePdfPreviewModal()">Fechar</button>
+                <button type="button" class="modal-btn save" id="downloadPdfBtn">Baixar PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Opções de PDF -->
+    <div id="pdfOptionsModal" class="event-modal">
+        <div class="event-modal-content">
+            <h2><i class="fas fa-cog"></i> Opções de Exportação de PDF</h2>
+            <form id="pdfOptionsForm">
+                <div class="form-group">
+                    <label for="pdfTitle">Título do Documento</label>
+                    <input type="text" id="pdfTitle" placeholder="Diário de Cultivo: Nome da Planta">
+                </div>
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 10px;">
+                    <label>
+                        <input type="checkbox" id="pdfIncludeDetails" checked> Incluir tabela de detalhes (pH, EC, etc.)
+                    </label>
+                    <label>
+                        <input type="checkbox" id="pdfIncludeImages" checked> Incluir imagens dos eventos
+                    </label>
+                    <label>
+                        <input type="checkbox" id="pdfIncludeSetup" checked> Incluir informações de Setup (Iluminação/Ambiente)
+                    </label>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-btn cancel" onclick="closePdfOptionsModal()">Cancelar</button>
+                    <button type="submit" class="modal-btn save">Gerar PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <footer>
         <p>Plano de Rega Avançado | Desenvolvido para Fertilizantes NPK</p>
         <p>Cultive com sabedoria, colha com satisfação</p>
@@ -1917,11 +2426,64 @@
             </a>
         </p>
     </footer>
+
+    <!-- Modal de Informações da Planta -->
+    <div id="plantInfoModal" class="event-modal">
+        <div class="event-modal-content">
+            <h2><i class="fas fa-info-circle"></i> Informações da Planta</h2>
+            <div id="plantInfoContent">
+                <!-- Conteúdo será gerado por JS -->
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn cancel" onclick="closePlantInfoModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
 <div id="statusBar" class="status-bar success" style="display: none"></div>
-   <div id="npkModal" class="event-modal">
-            <div class="event-modal-content">
+   <!-- Modal Unificado de Configurações -->
+    <div id="configModal" class="event-modal">
+        <div class="event-modal-content">
+            <div class="config-tabs">
+                <button class="config-tab active" data-tab="setups"><i class="fas fa-cogs"></i> Setups</button>
+                <button class="config-tab" data-tab="fertilizers"><i class="fas fa-flask"></i> Fertilizantes</button>
+            </div>
+
+            <!-- Conteúdo da Aba de Setups -->
+            <div id="setupsTabContent" class="config-tab-content active">
+                <h2><i class="fas fa-cogs"></i> Gerenciar Setups</h2>
+                <p style="color: #b0b0b0; font-size: 0.9rem; margin-bottom: 20px;">
+                    Crie e edite seus setups de cultivo (iluminação e ambiente) aqui.
+                </p>
+                <form id="setupForm" class="form-group">
+                    <input type="hidden" id="setupId">
+                    <div class="form-group">
+                        <label for="setupName">Nome do Setup</label>
+                        <input type="text" id="setupName" placeholder="Ex: Vega LED 150W" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="setupLighting">Iluminação</label>
+                            <input type="text" id="setupLighting" placeholder="Ex: LED 150W" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="setupEnvironment">Ambiente</label>
+                            <input type="text" id="setupEnvironment" placeholder="Ex: Grow 80x80" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="setupLightDuration">Tempo de Luz (horas/dia)</label>
+                        <input type="text" id="setupLightDuration" placeholder="Ex: 18/6, 12/12, 24/0">
+                    </div>
+                    <button type="submit" class="modal-btn save" style="width: 100%;">Salvar Setup</button>
+                </form>
+                <div id="setupsList" style="margin-top: 20px;"></div>
+            </div>
+
+            <!-- Conteúdo da Aba de Fertilizantes -->
+            <div id="fertilizersTabContent" class="config-tab-content">
                 <h2><i class="fas fa-flask"></i> Configuração de Fertilizantes</h2>
                 <form id="npkForm">
+                    <!-- ... (conteúdo do formulário NPK permanece o mesmo) ... -->
                     <div class="form-group">
                         <h3>Fase Vegetativa</h3>
                         <div class="form-row">
@@ -1939,7 +2501,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div class="form-group">
                         <h3>Fase de Floração</h3>
                         <div class="form-row">
@@ -1975,20 +2536,20 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="modal-buttons">
-                        <button type="button" class="modal-btn cancel" onclick="closeNPKModal()">Cancelar</button>
-                        <button type="submit" class="modal-btn save">Salvar Configurações</button>
-                    </div>
                 </form>
+            </div>
+
+            <div class="modal-buttons" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 15px;">
+                <button type="button" class="modal-btn cancel" onclick="closeConfigModal()">Fechar</button>
+                <button type="submit" form="npkForm" class="modal-btn save" id="saveFertilizerBtn">Salvar Fertilizantes</button>
             </div>
         </div>
     </div>
     <script>
-        // Configuração do IndexedDB
+         // Configuração do IndexedDB
         const openDB = () => {
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open('PlantDiaryDB', 3);
+                const request = indexedDB.open('PlantDiaryDB', 3); // Versão aumentada para 3
                 
                 request.onerror = () => reject(request.error);
                 request.onsuccess = () => resolve(request.result);
@@ -1997,6 +2558,7 @@
                     const db = event.target.result;
                     const oldVersion = event.oldVersion;
                     
+                    // Criar object stores se necessário
                     if (oldVersion < 1 || !db.objectStoreNames.contains('plants')) {
                         db.createObjectStore('plants', { keyPath: 'id' });
                     }
@@ -2020,7 +2582,7 @@
             });
         };
         
-        // Armazena o handle do diretório
+        // Armazena o handle do diretório no IndexedDB para persistência
         async function storeDirectoryHandle(handle) {
             try {
                 const db = await openDB();
@@ -2031,7 +2593,7 @@
             }
         }
 
-        // Recupera o handle do diretório
+        // Recupera o handle do diretório do IndexedDB
         async function getDirectoryHandle() {
             try {
                 const db = await openDB();
@@ -2053,18 +2615,31 @@
         let selectedPlant = null;
         let selectedEvent = null;
         let currentPage = 0;
+        let setups = [];
         const cardsPerPage = 3;
         let totalPages = 0;
         let savedDirectory = 'Plano Diario';
         let directoryHandle = null;
-        let permissionGranted = false;
-        let currentWeekOffset = 0;
         let npkSettings = {
             vegetative: { n: 10, p: 5, k: 5 },
             flowering: { n: 5, p: 10, k: 15 },
             fruiting: { n: 3, p: 12, k: 18 }
         };
-        let currentWateringDate = null;
+        let currentWateringDate = null; // Para o modal de seleção de rega
+        let currentGalleryPhotos = []; // Para a galeria de fotos
+        let currentGalleryIndex = 0; // Índice atual na galeria ampliada
+        let permissionGranted = false; // Adicionado de volta para consistência
+        // Variáveis para a pré-visualização do PDF
+        let generatedPdfDataUri = null;
+        let generatedPdfFileName = '';
+
+        // Helper function to parse YYYY-MM-DD string as local date to avoid timezone issues.
+        function parseLocalDate(dateString) {
+            if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return null;
+            const [year, month, day] = dateString.split('-').map(Number);
+            // Using new Date(year, month-1, day) creates a date at midnight in the local timezone.
+            return new Date(year, month - 1, day);
+        }
 
         // Função para mostrar mensagens de status
         function showStatusBar(message, type) {
@@ -2143,10 +2718,12 @@
                 k: parseFloat(document.getElementById('fruitK').value) || 18
             };
             
+            // Salvar no IndexedDB
             saveNPKSettingsToDB(npkSettings);
             showStatusBar('Configurações de NPK salvas com sucesso!', 'success');
-            closeNPKModal();
+            closeConfigModal();
             
+            // Atualizar calendário se houver planta selecionada
             if (selectedPlant) {
                 renderWateringCalendar(selectedPlant);
             }
@@ -2157,13 +2734,16 @@
             const field = document.getElementById(fieldId);
             if (!field) return;
             
+            // Adicionar classe de erro
             field.classList.add('input-error');
             
+            // Remover mensagem anterior se existir
             let errorElement = field.nextElementSibling;
             if (errorElement && errorElement.classList.contains('error-message')) {
                 errorElement.remove();
             }
             
+            // Criar elemento de mensagem
             errorElement = document.createElement('div');
             errorElement.className = 'error-message';
             errorElement.textContent = message;
@@ -2172,10 +2752,12 @@
         
         // Resetar erros de validação
         function resetValidationErrors() {
+            // Remover classes de erro
             document.querySelectorAll('.input-error').forEach(field => {
                 field.classList.remove('input-error');
             });
             
+            // Remover mensagens de erro
             document.querySelectorAll('.error-message').forEach(element => {
                 element.remove();
             });
@@ -2184,32 +2766,37 @@
         // Inicializar o sistema de arquivos
         async function initFileSystem() {
             try {
+                // 1. Tenta recuperar o handle do diretório do IndexedDB
                 const handle = await getDirectoryHandle();
                 
                 if (handle) {
+                    // Verifica se a permissão para o handle ainda é válida
                     if (await verifyPermission(handle, true)) {
-                        directoryHandle = handle;
+                        directoryHandle = handle; // Atribui ao handle global
                         permissionGranted = true;
-                        return true;
+                        return true; // Sucesso!
                     }
                 }
             } catch (error) {
                 console.error("Erro ao inicializar sistema de arquivos:", error);
             }
+            // Se não houver handle ou a permissão expirou, retorna false
             return false;
         }
         
         // Verificar permissão
-        async function verifyPermission(handle, readWrite) {
+        async function verifyPermission(handle, readWrite = false) {
             const options = {};
             if (readWrite) {
                 options.mode = 'readwrite';
             }
             
+            // Verificar se já temos permissão, se não, solicitar
             if (await handle.queryPermission(options) === 'granted') {
                 return true;
             }
             
+            // Se não tiver, solicita. Isso pode mostrar um prompt para o usuário.
             if (await handle.requestPermission(options) === 'granted') {
                 return true;
             }
@@ -2220,35 +2807,69 @@
         // Solicitar acesso ao sistema de arquivos
         async function requestDirectoryAccess() {
             try {
-                const handle = await window.showDirectoryPicker({
-                    startIn: 'documents',
-                    id: 'plantDiaryImages',
-                    mode: 'readwrite'
-                });
-                
-                await storeDirectoryHandle(handle);
-                directoryHandle = handle;
-                permissionGranted = true;
-                return true;
-            } catch (error) {
-                console.error("Erro ao solicitar acesso ao diretório:", error);
-                return false;
-            }
+               // 1. Pedir ao usuário para selecionar um diretório PAI
+               const parentHandle = await window.showDirectoryPicker({
+                   startIn: 'documents',
+                   id: 'plantDiaryParent', // ID para o diretório pai
+                   mode: 'readwrite'
+               });
+
+               // 2. Tentar obter/criar a pasta "Plano Diário" dentro do diretório selecionado
+               const diaryHandle = await parentHandle.getDirectoryHandle('Plano Diário', { create: true });
+
+               // 3. Armazenar o handle da pasta "Plano Diário" no IndexedDB
+               await storeDirectoryHandle(diaryHandle);
+               
+               directoryHandle = diaryHandle; // Atribui o handle da pasta "Plano Diário"
+               permissionGranted = true;
+               
+               showStatusBar('Pasta "Plano Diário" selecionada com sucesso!', 'success');
+               return true;
+           } catch (error) {
+               console.error("Erro ao solicitar acesso ao diretório:", error);
+               if (error.name !== 'AbortError') {
+                   showStatusBar('Não foi possível acessar a pasta.', 'error');
+               }
+               return false;
+           }
         }
         
         // Salvar imagem no sistema de arquivos
-        async function saveImageToFileSystem(imageFile) {
+        async function saveImageToFileSystem(imageFile, plant, eventDate) {
             if (!directoryHandle || !permissionGranted) return null;
             
             try {
-                const fileName = `image-${Date.now()}.${imageFile.name.split('.').pop()}`;
-                const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
+                // 1. Obter informações para o nome do arquivo
+                const plantName = plant.name.replace(/[^a-zA-Z0-9]/g, '_'); // Sanitiza o nome
+                const phase = getPlantPhase(plant, eventDate);
+                const dateStr = eventDate.replace(/-/g, ''); // Formato YYYYMMDD
+                const extension = imageFile.name.split('.').pop() || 'jpg';
+
+                // 2. Construir o nome do arquivo base e verificar se já existe
+                const baseFileName = `${plantName}-${phase}-${dateStr}`;
+                let finalFileName = `${baseFileName}.${extension}`;
+                let counter = 1;
+
+                // Loop para garantir um nome de arquivo único
+                while (true) {
+                    try {
+                        await directoryHandle.getFileHandle(finalFileName, { create: false });
+                        finalFileName = `${baseFileName}_${counter++}.${extension}`;
+                    } catch (e) {
+                        if (e.name === 'NotFoundError') break; // Nome de arquivo disponível
+                        else throw e; // Outro erro
+                    }
+                }
+
+                // 3. Salvar o arquivo
+                const fileHandle = await directoryHandle.getFileHandle(finalFileName, { create: true });
                 const writable = await fileHandle.createWritable();
                 await writable.write(imageFile);
                 await writable.close();
-                return fileName;
+                return finalFileName;
             } catch (error) {
                 console.error("Erro ao salvar imagem:", error);
+                showStatusBar('Falha ao salvar a imagem.', 'error');
                 return null;
             }
         }
@@ -2267,41 +2888,105 @@
             }
         }
         
-        // Definir data atual como padrão nos formulários
-        function setTodayAsDefaultDate() {
-            const today = new Date();
-            const day = today.getDate();
-            const month = today.getMonth() + 1;
-            const year = today.getFullYear();
-            const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-            document.getElementById('eventDate').value = formattedDate;
+        // Helper para obter a imagem como Data URL, seja do sistema de arquivos ou do cache base64
+        async function getImageDataUrl(entry) {
+            // Prioriza a imagem em base64 se existir (cache)
+            if (entry.imageData) {
+                return entry.imageData;
+            }
+            // Se não, tenta carregar do sistema de arquivos
+            if (entry.imageFileName && directoryHandle && permissionGranted) {
+                try {
+                    const fileHandle = await directoryHandle.getFileHandle(entry.imageFileName);
+                    const file = await fileHandle.getFile();
+                    return await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                } catch (error) {
+                    console.error("Erro ao carregar imagem do sistema de arquivos para o PDF:", error);
+                    return null;
+                }
+            }
+            return null;
         }
 
-        // Função para abrir o modal de NPK
-        function openNPKModal() {
+        // Atualizar indicador de pasta
+        function updateFolderIndicator() {
+            const folderName = document.getElementById('folderName');
+            if (folderName) {
+                folderName.textContent = savedDirectory;
+            }
+        }
+
+        // Helper para obter a data local no formato YYYY-MM-DD
+        function getLocalDateString(date = new Date()) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Definir data atual como padrão nos formulários
+       function setTodayAsDefaultDate() {
+            document.getElementById('eventDate').value = getLocalDateString();
+}
+
+        // --- LÓGICA DO MODAL DE CONFIGURAÇÃO UNIFICADO ---
+
+        function openConfigModal(initialTab = 'setups') {
+            history.pushState({ modal: 'configModal' }, 'Configurações', '#config');
+            document.getElementById('configModal').style.display = 'flex';
+            switchConfigTab(initialTab);
+        }
+
+        function closeConfigModal() {
+            document.getElementById('configModal').style.display = 'none';
+            // Se o estado atual for o modal, volte para limpar o histórico
+            if (history.state && history.state.modal === 'configModal') {
+                history.back();
+            }
+        }
+
+        function switchConfigTab(tabName) {
+            // Esconder todos os conteúdos
+            document.querySelectorAll('.config-tab-content').forEach(content => content.classList.remove('active'));
+            // Desativar todas as abas
+            document.querySelectorAll('.config-tab').forEach(tab => tab.classList.remove('active'));
+
+            // Ativar a aba e o conteúdo corretos
+            document.getElementById(`${tabName}TabContent`).classList.add('active');
+            document.querySelector(`.config-tab[data-tab="${tabName}"]`).classList.add('active');
+
+            // Lógica específica ao abrir a aba
+            if (tabName === 'setups') {
+                renderSetupsList();
+                document.getElementById('saveFertilizerBtn').style.display = 'none';
+            } else if (tabName === 'fertilizers') {
+                populateNpkForm();
+                document.getElementById('saveFertilizerBtn').style.display = 'inline-block';
+            }
+        }
+
+        function populateNpkForm() {
             document.getElementById('vegN').value = npkSettings.vegetative.n;
             document.getElementById('vegP').value = npkSettings.vegetative.p;
             document.getElementById('vegK').value = npkSettings.vegetative.k;
-            
             document.getElementById('flowerN').value = npkSettings.flowering.n;
             document.getElementById('flowerP').value = npkSettings.flowering.p;
             document.getElementById('flowerK').value = npkSettings.flowering.k;
-            
             document.getElementById('fruitN').value = npkSettings.fruiting.n;
             document.getElementById('fruitP').value = npkSettings.fruiting.p;
             document.getElementById('fruitK').value = npkSettings.fruiting.k;
-            
-            document.getElementById('npkModal').style.display = 'flex';
-        }
-
-        function closeNPKModal() {
-            document.getElementById('npkModal').style.display = 'none';
         }
 
         // Funções para o modal de seleção de rega
         function openWateringModal(date) {
+            history.pushState({ modal: 'wateringModal' }, 'Seleção de Rega', '#watering');
             currentWateringDate = date;
-            const dateObj = new Date(date);
+            const dateObj = parseLocalDate(date);
             const formattedDate = dateObj.toLocaleDateString('pt-BR');
             document.getElementById('wateringDateText').textContent = `Para o dia: ${formattedDate}`;
             document.getElementById('wateringModal').style.display = 'flex';
@@ -2309,6 +2994,57 @@
 
         function closeWateringModal() {
             document.getElementById('wateringModal').style.display = 'none';
+            if (history.state && history.state.modal === 'wateringModal') {
+                history.back();
+            }
+        }
+
+        // Funções para o modal de pré-visualização de PDF
+        function openPdfPreviewModal(pdfDataUri, fileName) {
+            history.pushState({ modal: 'pdfPreviewModal' }, 'Preview PDF', '#pdfpreview');
+            generatedPdfDataUri = pdfDataUri;
+            generatedPdfFileName = fileName;
+            document.getElementById('pdfPreviewFrame').src = pdfDataUri;
+            document.getElementById('pdfPreviewModal').style.display = 'flex';
+        }
+
+        function closePdfPreviewModal() {
+            document.getElementById('pdfPreviewFrame').src = 'about:blank'; // Limpa o iframe
+            generatedPdfDataUri = null;
+            generatedPdfFileName = '';
+            if (history.state && history.state.modal === 'pdfPreviewModal') {
+                history.back();
+            }
+            document.getElementById('pdfPreviewModal').style.display = 'none';
+        }
+
+        // Funções para o modal de opções de PDF
+        function openPdfOptionsModal() {
+            history.pushState({ modal: 'pdfOptionsModal' }, 'Opções PDF', '#pdfoptions');
+            if (!selectedPlant) {
+                showStatusBar('Selecione uma planta primeiro.', 'error');
+                return;
+            }
+            document.getElementById('pdfTitle').value = `Diário de Cultivo: ${selectedPlant.name}`;
+            document.getElementById('pdfOptionsModal').style.display = 'flex';
+        }
+
+        function closePdfOptionsModal() {
+            if (history.state && history.state.modal === 'pdfOptionsModal') {
+                history.back();
+            }
+            document.getElementById('pdfOptionsModal').style.display = 'none';
+        }
+
+        function downloadPdfFromPreview() {
+            if (generatedPdfDataUri) {
+                const link = document.createElement('a');
+                link.href = generatedPdfDataUri;
+                link.download = generatedPdfFileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
         }
 
         // Função para marcar rega
@@ -2318,6 +3054,7 @@
                 return;
             }
             
+            // Verificar se já existe uma entrada para este dia
             const existingEntry = journalEntries.find(entry => 
                 entry.plantId === selectedPlant.id && 
                 entry.date === date
@@ -2328,10 +3065,12 @@
                     return;
                 }
                 
+                // Atualizar entrada existente
                 existingEntry.watering = type;
                 existingEntry.notes = existingEntry.notes || "Rega aplicada conforme calendário";
                 existingEntry.title = `Rega - ${type}`;
             } else {
+                // Criar novo evento de rega
                 const newEvent = {
                     id: String(Date.now()),
                     plantId: selectedPlant.id,
@@ -2344,9 +3083,12 @@
                 journalEntries.push(newEvent);
             }
             
+            // Atualizar dados e interface
             saveData();
             renderWateringCalendar(selectedPlant);
             loadTimeline(selectedPlant.id);
+            
+            // Feedback visual
             showStatusBar(`Rega ${type} marcada com sucesso!`, 'success');
         }
 
@@ -2355,6 +3097,7 @@
             const plantList = document.getElementById("plantList");
             plantList.innerHTML = "";
 
+            // Atualizar contador de plantas
             const plantCountEl = document.getElementById('plantCount');
             if (plantCountEl) {
                 plantCountEl.textContent = `(${plants.length})`;
@@ -2362,22 +3105,38 @@
 
             plants.forEach(plant => {
                 const today = new Date();
-                const germDate = new Date(plant.germinationDate);
+                const germDate = parseLocalDate(plant.germinationDate);
+                
+                // Corrigido: Adicionar +1 para contar o dia atual corretamente
                 const ageInDays = Math.floor((today - germDate) / (1000 * 60 * 60 * 24)) + 1;
                 const ageInWeeks = Math.floor(ageInDays / 7) + 1;
+                
+                // Obter fase atual da planta
                 const phase = getPlantPhase(plant);
                 const phaseName = getPhaseName(phase);
                 const phaseClass = getPhaseClass(phase);
 
+                const setup = setups.find(s => s.id === plant.setupId);
+                const lighting = setup ? setup.lighting : 'Não definido';
+                const environment = setup ? setup.environment : 'Não definido';
+
                 const plantCard = document.createElement("div");
+                const lightDuration = setup ? setup.lightDuration : '';
                 plantCard.className = `plant-card ${plant.type}`;
                 plantCard.dataset.id = plant.id;
                 plantCard.innerHTML = `
-                    <div class="plant-name">
+                    <div class="plant-name" style="word-break: break-word;">
+                        <i class="fas fa-grip-vertical plant-drag-handle" title="Arraste para reordenar"></i>
                         <i class="fas fa-seedling"></i> ${plant.name}
                     </div>
                     <div class="plant-details">
-                        <div>${plant.genetics || 'Híbrida'}</div>
+                        <div class="setup-container">
+                            <div class="setup-info">
+                                <div><i class="fas fa-lightbulb"></i> ${lighting}</div>
+                                <div><i class="fas fa-home"></i> ${environment}</div>
+                                ${lightDuration ? `<div><i class="fas fa-hourglass-half"></i> ${lightDuration}</div>` : ''}
+                            </div>
+                        </div>
                         <div class="plant-type ${plant.type === 'auto' ? 'type-auto' : 'type-photo'}">
                             ${plant.type === 'auto' ? 'Automática' : 'Fotoperíodo'}
                         </div>
@@ -2386,7 +3145,7 @@
                         </div>
                     </div>
                     <div class="germination-date">
-                        <i class="fas fa-calendar-day"></i> ${new Date(plant.germinationDate).toLocaleDateString('pt-BR')}
+                        <i class="fas fa-calendar-day"></i> ${parseLocalDate(plant.germinationDate).toLocaleDateString('pt-BR')}
                     </div>
                     <div class="plant-age-container">
                         <div class="plant-age">
@@ -2398,31 +3157,61 @@
                     </div>
                 `;
             
+                // Botão de menu de contexto
                 const menuBtn = document.createElement("button");
                 menuBtn.className = "plant-menu-btn";
                 menuBtn.innerHTML = '<i class="fas fa-ellipsis-v"></i>';
                 plantCard.appendChild(menuBtn);
 
+                // Menu de contexto
                 const menu = document.createElement("div");
                 menu.className = "plant-menu";
                 menu.innerHTML = `
                     <button class="menu-edit-btn" data-id="${plant.id}">Editar</button>
+                    <button class="menu-info-btn" data-id="${plant.id}"><i class="fas fa-info-circle"></i> Infos</button>
+                    <button class="menu-phase-btn" data-id="${plant.id}"><i class="fas fa-sync-alt"></i> Mudar Fase</button>
+                    <button class="menu-setup-btn" data-id="${plant.id}"><i class="fas fa-cogs"></i> Mudar Setup</button>
                     <button class="menu-delete-btn" data-id="${plant.id}">Excluir</button>
                 `;
                 plantCard.appendChild(menu);
 
+                // Event listeners para o menu
                 menuBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
+                    // Esconder outros menus
                     document.querySelectorAll('.plant-menu').forEach(m => {
                         if (m !== menu) m.style.display = 'none';
                     });
+                    // Mostrar/ocultar este menu
                     menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+                });
+
+                menu.querySelector('.menu-info-btn').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const plantId = this.dataset.id;
+                    openPlantInfoModal(plantId);
+                    menu.style.display = 'none';
+                });
+
+                menu.querySelector('.menu-phase-btn').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const plantId = this.dataset.id;
+                    openPhaseChangeModal(plantId);
+                    menu.style.display = 'none';
                 });
 
                 menu.querySelector('.menu-edit-btn').addEventListener('click', function(e) {
                     e.stopPropagation();
                     const plantId = this.dataset.id;
                     editPlant(plantId);
+                    menu.style.display = 'none';
+                });
+
+                menu.querySelector('.menu-setup-btn').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const plantId = this.dataset.id;
+                    selectedPlant = plants.find(p => p.id === plantId); // Garante que a planta está selecionada
+                    openSetupChangeModal(plantId);
                     menu.style.display = 'none';
                 });
 
@@ -2436,46 +3225,101 @@
                 plantList.appendChild(plantCard);
             });
 
+            // Calcular páginas para navegação
             totalPages = Math.ceil(plants.length / cardsPerPage);
             updateCarouselNav();
         }
 
+        // Popula um dropdown de setups
+        function populateSetupDropdown(dropdownId, selectedId = null) {
+            const select = document.getElementById(dropdownId);
+            select.innerHTML = '<option value="">Selecione um Setup...</option>'; // Opção padrão
+
+            setups.forEach(setup => {
+                const option = document.createElement('option');
+                option.value = setup.id;
+                option.textContent = setup.name;
+                if (setup.id === selectedId) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        }
+
+        // Helper para gerar a classe de cor da rega
+        function getWateringTypeClass(type) {
+            if (!type) return '';
+            const sanitized = type.toLowerCase()
+                                  .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove acentos
+                                  .replace(/\s+/g, '-'); // substitui espaços por hífens
+            return `watered-type-${sanitized}`;
+        }
+
         // Renderizar calendário de rega
-        function renderWateringCalendar(plant) {
+       function renderWateringCalendar(plant) {
             if (!plant) {
                 document.getElementById('wateringCalendar').style.display = 'none';
                 return;
             }
-
+        
             document.getElementById('wateringCalendar').style.display = 'block';
             const calendarDays = document.getElementById('calendarDays');
             calendarDays.innerHTML = '';
-
-            const germDate = new Date(plant.germinationDate);
+        
+            const germDate = parseLocalDate(plant.germinationDate);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const plantAge = Math.floor((today - germDate) / (1000 * 60 * 60 * 24)) + 1;
-            document.getElementById('weekIndicator').textContent = `S${currentWeekOffset + 1}`;
-            
-            if (currentWeekOffset === 0) {
-                currentWeekOffset = Math.floor(plantAge / 7);
-            }
-            
-            for (let i = 0; i < 7; i++) {
-                const dayOffset = i + (currentWeekOffset * 7);
+        
+            const maxDays = 150; // Renderiza um ciclo de vida longo
+            let todayCard = null;
+        
+            for (let i = 0; i < maxDays; i++) {
                 const dayDate = new Date(germDate);
-                dayDate.setDate(germDate.getDate() + dayOffset);
+                dayDate.setDate(germDate.getDate() + i);
+                
+                const dayNumber = dayDate.getDate();
                 const dayOfWeek = dayDate.toLocaleDateString('pt-BR', { weekday: 'short' });
-                const dayAge = dayOffset + 1;
-                const dateStr = dayDate.toISOString().split('T')[0];
+                const dayAge = i + 1;
+                const dateStr = dayDate.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+                
+                // Verificar se é o dia atual
                 const isToday = dayDate.getTime() === today.getTime();
-                const phase = getPlantPhase(plant, dayDate.toISOString().split('T')[0]);
+                
+                // Obter fase da planta neste dia
+                const phase = getPlantPhase(plant, dateStr);
                 const phaseName = getPhaseName(phase);
                 const phaseClass = getPhaseClass(phase);
+
+                // Obter recomendações de rega para este dia e fase
                 const wateringInfo = getWateringRecommendation(plant, dayAge, phase);
-                
+
+                // Determinar classes e texto para o status da rega
+                let statusIconClass = '';
+                let statusTextClass = '';
+                let statusText = '';
+
+                if (wateringInfo.watered) {
+                    const typeClass = getWateringTypeClass(wateringInfo.type);
+                    statusIconClass = `watered-icon ${typeClass}`;
+                    statusTextClass = typeClass;
+                    statusText = wateringInfo.type;
+                } else if (wateringInfo.shouldWater) {
+                    statusIconClass = 'watering-yes';
+                    statusTextClass = 'watering-yes';
+                    statusText = 'Rega recomendada';
+                } else {
+                    statusIconClass = 'watering-no';
+                    statusTextClass = 'watering-no';
+                    statusText = 'Sem rega hoje';
+                }
+
                 const dayCard = document.createElement('div');
-                dayCard.className = `day-card ${isToday ? 'today' : ''}`;
+                dayCard.className = 'day-card';
+                if (isToday) {
+                    dayCard.classList.add('today');
+                    todayCard = dayCard; // Guarda referência ao card de hoje
+                }
+
                 dayCard.innerHTML = `
                     ${isToday ? '<div class="current-day-indicator">Hoje</div>' : ''}
                     <div class="day-header">
@@ -2484,10 +3328,8 @@
                     </div>
                     <div class="watering-info">
                         <div class="watering-status">
-                            <i class="fas fa-tint ${wateringInfo.watered ? 'watered-icon' : (wateringInfo.shouldWater ? 'watering-yes' : 'watering-no')}"></i>
-                            <span class="${wateringInfo.watered ? 'watering-yes' : (wateringInfo.shouldWater ? 'watering-yes' : 'watering-no')}">
-                                ${wateringInfo.watered ? wateringInfo.type : (wateringInfo.shouldWater ? 'Rega recomendada' : 'Sem rega hoje')}
-                            </span>
+                            <i class="fas fa-tint ${statusIconClass}"></i>
+                            <span class="${statusTextClass}">${statusText}</span>
                         </div>
                         <div class="watering-values">
                             <div>
@@ -2511,6 +3353,7 @@
                     </button>
                 `;
                 
+                // Verificar se já foi regado neste dia e atualizar o botão
                 const btn = dayCard.querySelector('.day-water-btn');
                 if (wateringInfo.watered) {
                     btn.classList.add('watered');
@@ -2522,6 +3365,51 @@
                 
                 calendarDays.appendChild(dayCard);
             }
+        
+            // Rola para o card do dia atual, centralizando-o
+            if (todayCard) {
+                setTimeout(() => {
+                    todayCard.scrollIntoView({
+                        behavior: 'smooth',
+                        inline: 'center',
+                        block: 'nearest'
+                    });
+                }, 100); // Pequeno delay para garantir a renderização
+            }
+        }
+
+        // Atualiza o indicador de semana com base no scroll
+        function updateWeekIndicator() {
+            const container = document.querySelector('.calendar-days-container');
+            const indicator = document.getElementById('weekIndicator');
+            if (!container || !indicator) return;
+
+            const containerRect = container.getBoundingClientRect();
+            const containerCenter = containerRect.left + (containerRect.width / 2);
+
+            let centerCard = null;
+            let minDistance = Infinity;
+
+            // Encontra o card mais próximo do centro
+            container.querySelectorAll('.day-card').forEach(card => {
+                const cardRect = card.getBoundingClientRect();
+                const cardCenter = cardRect.left + (cardRect.width / 2);
+                const distance = Math.abs(containerCenter - cardCenter);
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    centerCard = card;
+                }
+            });
+
+            if (centerCard) {
+                const dayAgeText = centerCard.querySelector('.day-number').textContent;
+                const dayAge = parseInt(dayAgeText.replace('Dia ', ''));
+                if (!isNaN(dayAge)) {
+                    const weekNumber = Math.floor((dayAge - 1) / 7) + 1;
+                    indicator.textContent = `S${weekNumber}`;
+                }
+            }
         }
 
         // Obter recomendações de rega baseadas na fase e idade da planta
@@ -2530,8 +3418,9 @@
             let shouldWater = false;
             let ph = '6.0-6.5';
             let ec = '1.0-1.2';
-            let npkValue = "";
             
+            // Obter configuração de NPK para a fase
+            let npkValue = "";
             if (phase === "vegetative") {
                 npkValue = `${npkSettings.vegetative.n}-${npkSettings.vegetative.p}-${npkSettings.vegetative.k}`;
             } 
@@ -2542,11 +3431,14 @@
                 npkValue = `${npkSettings.fruiting.n}-${npkSettings.fruiting.p}-${npkSettings.fruiting.k}`;
             }
             else {
+                // Fase padrão
                 npkValue = `${npkSettings.vegetative.n}-${npkSettings.vegetative.p}-${npkSettings.vegetative.k}`;
             }
             
+            // Dias pares - rega, dias ímpares - descanso (para exemplo)
             shouldWater = dayAge % 2 === 0;
             
+            // Ajustar valores baseados na fase
             switch(phase) {
                 case 'vegetative':
                     ph = isAuto ? '5.8-6.2' : '5.8-6.3';
@@ -2569,8 +3461,9 @@
                     ec = '1.0-1.4';
             }
             
-            const dayDate = new Date(plant.germinationDate);
-            dayDate.setDate(dayDate.getDate() + dayAge - 1);
+            // Verificar se há registro de rega neste dia
+            const dayDate = parseLocalDate(plant.germinationDate);
+            dayDate.setDate(dayDate.getDate() + dayAge - 1); // Ajuste para dia correto
             const dayStr = dayDate.toISOString().split('T')[0];
             
             const wateringEntry = journalEntries.find(entry => 
@@ -2627,6 +3520,7 @@
 
         // Configurar event listeners
         function setupEventListeners() {
+            // Seleção de planta
             document.getElementById('plantList').addEventListener('click', function(e) {
                 const card = e.target.closest('.plant-card');
                 if (card) {
@@ -2634,23 +3528,27 @@
                     const plant = plants.find(p => p.id === plantId);
                     
                     if (plant) {
+                        // Remover seleção de outras plantas
                         document.querySelectorAll('.plant-card').forEach(c => {
                             c.classList.remove('selected');
                         });
+                        
+                        // Adicionar seleção atual
                         card.classList.add('selected');
-                        currentWeekOffset = 0;
-                        const germDate = new Date(plant.germinationDate);
-                        const today = new Date();
-                        today.setHours(0,0,0,0);
-                        const plantAge = Math.floor((today - germDate) / (1000 * 60 * 60 * 24));
-                        currentWeekOffset = Math.floor(plantAge / 7);
+                        
+                        // Carregar linha do tempo
                         loadTimeline(plantId);
                         selectedPlant = plant;
+                        
+                        // Renderizar calendário de rega (que agora rola para o dia atual)
                         renderWateringCalendar(plant);
+                        
+                        // Atualizar título da linha do tempo apenas com o nome da planta
                         document.getElementById('plantNameTitle').textContent = plant.name;
                     }
                 }
                 
+                // Deleção de planta
                 if (e.target.closest('.delete-plant-btn')) {
                     const btn = e.target.closest('.delete-plant-btn');
                     const plantId = btn.dataset.id;
@@ -2658,6 +3556,7 @@
                     return;
                 }
                 
+                // Edição de planta
                 if (e.target.closest('.edit-plant-btn')) {
                     const btn = e.target.closest('.edit-plant-btn');
                     const plantId = btn.dataset.id;
@@ -2666,9 +3565,10 @@
                 }
             });
 
+            // Botões de navegação do carrossel
             document.querySelector('.prev-btn').addEventListener('click', () => {
                 const plantList = document.getElementById("plantList");
-                plantList.scrollBy({ left: -235, behavior: 'smooth' });
+                plantList.scrollBy({ left: -235, behavior: 'smooth' }); // 220px card + 15px gap
             });
 
             document.querySelector('.next-btn').addEventListener('click', () => {
@@ -2676,20 +3576,26 @@
                 plantList.scrollBy({ left: 235, behavior: 'smooth' });
             });
 
+            const calendarContainer = document.querySelector('.calendar-days-container');
+            const dayCardWidth = 120 + 10; // min-width do card + gap
+
+            // Botões de navegação do calendário
             document.getElementById('prevWeekBtn').addEventListener('click', () => {
-                currentWeekOffset--;
-                if (selectedPlant) {
-                    renderWateringCalendar(selectedPlant);
-                }
+                calendarContainer.scrollBy({ left: -7 * dayCardWidth, behavior: 'smooth' });
             });
 
             document.getElementById('nextWeekBtn').addEventListener('click', () => {
-                currentWeekOffset++;
-                if (selectedPlant) {
-                    renderWateringCalendar(selectedPlant);
-                }
+                calendarContainer.scrollBy({ left: 7 * dayCardWidth, behavior: 'smooth' });
             });
 
+            // Atualiza o indicador de semana durante o scroll (com debounce)
+            let scrollTimeout;
+            calendarContainer.addEventListener('scroll', () => {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(updateWeekIndicator, 150);
+            });
+
+            // Event listener para botões de rega rápida
             document.getElementById('calendarDays').addEventListener('click', function(e) {
                 const btn = e.target.closest('.day-water-btn');
                 if (btn) {
@@ -2698,6 +3604,7 @@
                 }
             });
 
+            // Event listeners para o modal de seleção de rega
             document.querySelectorAll('.watering-option').forEach(option => {
                 option.addEventListener('click', function() {
                     const type = this.dataset.type;
@@ -2706,24 +3613,49 @@
                 });
             });
 
-            document.getElementById('exportTimelineBtn').addEventListener('click', exportTimeline);
+            // Botões de ação
+            document.getElementById('exportTimelineBtn').addEventListener('click', openPdfOptionsModal);
             document.getElementById('addEventBtn').addEventListener('click', addNewEvent);
             document.getElementById('addPlantBtn').addEventListener('click', addNewPlant);
             document.getElementById('selectFolderBtn').addEventListener('click', selectDirectory);
             document.getElementById('deleteEventBtn').addEventListener('click', deleteEvent);
             document.getElementById('deletePlantBtn').addEventListener('click', deletePlantFromModal);
+            
+            document.getElementById('downloadPdfBtn').addEventListener('click', downloadPdfFromPreview);
+            // Formulário de evento
             document.getElementById('eventForm').addEventListener('submit', saveEvent);
+
+            // Formulário de opções de PDF
+            document.getElementById('pdfOptionsForm').addEventListener('submit', generatePdfWithOptions);
+            
+            // Preview de imagem
             document.getElementById('eventImage').addEventListener('change', previewImage);
+            
+            // Formulário de planta
             document.getElementById('plantForm').addEventListener('submit', savePlant);
+
+            // Formulário de mudança de setup
+            document.getElementById('setupChangeForm').addEventListener('submit', saveSetupChange);
+            
+            // Botões de ação
             document.getElementById('actionButtons').addEventListener('click', function(e) {
                 const button = e.target.closest('.action-button');
                 if (button) {
                     button.classList.toggle('selected');
+
+                    // Show/hide harvest fields
+                    const harvestButton = document.querySelector('.action-button[data-action="Colheita"]');
+                    const harvestFields = document.getElementById('harvestFields');
+                    if (harvestButton && harvestFields) {
+                        harvestFields.style.display = harvestButton.classList.contains('selected') ? 'block' : 'none';
+                    }
                 }
             });
             
+            // Conceder permissão (COM INDEXEDDB)
             document.getElementById('grantPermissionBtn').addEventListener('click', async () => {
                 const granted = await requestDirectoryAccess();
+
                 if (granted) {
                     document.getElementById('permissionRequest').style.display = 'none';
                     showStatusBar("Permissão concedida! As imagens serão salvas no sistema de arquivos.", 'success');
@@ -2735,24 +3667,132 @@
                 showStatusBar("Permissão negada. As imagens serão salvas apenas temporariamente.", 'error');
             });
 
-            document.getElementById('configBtn').addEventListener('click', openNPKModal);
-            document.getElementById('configureNPKBtn').addEventListener('click', openNPKModal);
+            // Botão de configuração
+            document.getElementById('configBtn').addEventListener('click', () => openConfigModal('setups'));
+            document.getElementById('configureNPKBtn').addEventListener('click', () => openConfigModal('fertilizers'));
+
+            // Abas do modal de configuração
+            document.querySelectorAll('.config-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    switchConfigTab(this.dataset.tab);
+                });
+            });
+            
+            // Formulário de NPK
             document.getElementById('npkForm').addEventListener('submit', saveNPKSettings);
             
+            // Menus de contexto
             document.addEventListener('click', function(e) {
+                // Fechar menus de contexto da timeline quando clicar fora
                 if (!e.target.closest('.event-menu-btn') && !e.target.closest('.event-menu')) {
                     document.querySelectorAll('.event-menu').forEach(menu => {
                         menu.style.display = 'none';
                     });
                 }
+
+                // Fechar menus de contexto dos cards de planta quando clicar fora
+                if (!e.target.closest('.plant-menu-btn') && !e.target.closest('.plant-menu')) {
+                    document.querySelectorAll('.plant-menu').forEach(menu => menu.style.display = 'none');
+                }
                 
+                // Abrir menu de contexto do evento
                 const menuBtn = e.target.closest('.event-menu-btn');
                 if (menuBtn) {
                     const menu = menuBtn.nextElementSibling;
+                    // Esconder outros menus
                     document.querySelectorAll('.event-menu').forEach(m => {
                         if (m !== menu) m.style.display = 'none';
                     });
+                    // Mostrar/ocultar este menu
                     menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+                }
+            });
+
+            // Navegação na galeria ampliada
+            document.getElementById('prevPhotoBtn').addEventListener('click', () => {
+                navigateGallery(-1);
+            });
+
+            document.getElementById('nextPhotoBtn').addEventListener('click', () => {
+                navigateGallery(1);
+            });
+
+            // --- Event Listeners para o formulário de Setups ---
+            document.getElementById('setupForm').addEventListener('submit', handleSetupFormSubmit);
+
+            document.getElementById('setupsList').addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-setup-btn');
+                if (editBtn) {
+                    editSetup(editBtn.dataset.id);
+                    return;
+                }
+
+                const deleteBtn = e.target.closest('.delete-setup-btn');
+                if (deleteBtn) {
+                    deleteSetup(deleteBtn.dataset.id);
+                    return;
+                }
+            });
+
+            // Fechar modais ao clicar no fundo
+            window.addEventListener('click', (event) => {
+                const eventModal = document.getElementById('eventModal');
+                const plantModal = document.getElementById('plantModal');
+                const imageModal = document.getElementById('imageModal');
+                const setupChangeModal = document.getElementById('setupChangeModal');
+                const phaseChangeModal = document.getElementById('phaseChangeModal');
+                const plantInfoModal = document.getElementById('plantInfoModal');
+                const permissionRequest = document.getElementById('permissionRequest');
+                const configModal = document.getElementById('configModal');
+                const wateringModal = document.getElementById('wateringModal');
+                const pdfPreviewModal = document.getElementById('pdfPreviewModal');
+                const pdfOptionsModal = document.getElementById('pdfOptionsModal');
+                const galleryModal = document.getElementById('galleryModal');
+
+                if (event.target === eventModal) closeEventModal();
+                if (event.target === plantModal) closePlantModal();
+                if (event.target === imageModal) closeImageModal();
+                if (event.target === phaseChangeModal) closePhaseChangeModal();
+                if (event.target === setupChangeModal) closeSetupChangeModal();
+                if (event.target === plantInfoModal) closePlantInfoModal();
+                if (event.target === permissionRequest) permissionRequest.style.display = 'none';
+                if (event.target === configModal) closeConfigModal();
+                if (event.target === wateringModal) closeWateringModal();
+                if (event.target === pdfPreviewModal) closePdfPreviewModal();
+                if (event.target === pdfOptionsModal) closePdfOptionsModal();
+                if (event.target === galleryModal) closeGalleryModal();
+            });
+
+            // Helper para fechar todos os modais
+            function closeAllModals() {
+                document.querySelectorAll('.event-modal, .image-modal, .watering-modal, .gallery-modal, .permission-request').forEach(modal => {
+                    modal.style.display = 'none';
+                });
+            }
+
+            // --- MANIPULADOR DO BOTÃO VOLTAR DO ANDROID ---
+            window.onpopstate = function(event) {
+                // Primeiro, fechamos qualquer modal que possa estar aberto.
+                closeAllModals();
+
+                // Se o estado que recebemos NÃO é a nossa 'barreira' de raiz do app,
+                // significa que o usuário voltou para o estado inicial (antes da barreira).
+                // Então, nós re-inserimos a barreira para impedir a saída na próxima vez.
+                if (!event.state || !event.state.app_root) {
+                    history.pushState({ app_root: true }, '');
+                }
+            };
+
+            // Formulário de mudança de fase
+            document.getElementById('phaseChangeForm').addEventListener('submit', savePhaseChange);
+
+            // Formulário de mudança de fase
+            document.getElementById('phaseChangeForm').addEventListener('submit', savePhaseChange);
+
+            // Atualiza a seleção visual do tipo de planta no modal
+            document.getElementById('plantModal').addEventListener('change', (e) => {
+                if (e.target.name === 'plantType') {
+                    updatePlantTypeSelection();
                 }
             });
         }
@@ -2761,6 +3801,7 @@
         function selectDirectory() {
             savedDirectory = prompt("Digite o nome da pasta para salvar os dados:", savedDirectory) || savedDirectory;
             localStorage.setItem('selectedDirectory', savedDirectory);
+            updateFolderIndicator();
             showStatusBar(`Pasta "${savedDirectory}" selecionada! Os dados serão salvos aqui.`, 'success');
         }
 
@@ -2770,19 +3811,25 @@
                 return;
             }
             
+            // Remover planta
             const plantIndex = plants.findIndex(p => p.id === plantId);
             if (plantIndex === -1) return;
+            
             plants.splice(plantIndex, 1);
             
+            // Remover registros associados
             for (let i = journalEntries.length - 1; i >= 0; i--) {
                 if (journalEntries[i].plantId === plantId) {
                     journalEntries.splice(i, 1);
                 }
             }
             
+            // Atualizar UI
             renderPlantList();
+            renderEnvironmentsSummary();
             saveData();
             
+            // Se a planta excluída era a selecionada
             if (selectedPlant && selectedPlant.id === plantId) {
                 selectedPlant = null;
                 document.getElementById("timelineContainer").classList.remove('has-plant');
@@ -2794,6 +3841,7 @@
                     </div>
                 `;
                 document.getElementById('plantNameTitle').textContent = '';
+                document.getElementById('photoGallery').style.display = 'none';
             }
             
             showStatusBar('Planta excluída com sucesso!', 'success');
@@ -2801,25 +3849,32 @@
 
         // Abrir modal para nova planta
         function addNewPlant() {
+            history.pushState({ modal: 'plantModal' }, 'Nova Planta', '#plant');
             document.getElementById('plantModalTitle').textContent = "Nova Planta";
             document.getElementById('plantForm').reset();
             document.getElementById('deletePlantBtn').style.display = 'none';
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('germinationDate').value = today;
+            populateSetupDropdown('plantSetup'); // Popula o dropdown
             document.getElementById('plantModal').style.display = 'flex';
         }
 
         // Abrir modal para editar planta
         function editPlant(plantId) {
+            history.pushState({ modal: 'plantModal' }, 'Editar Planta', '#plant');
             const plant = plants.find(p => p.id === plantId);
             if (!plant) return;
             
+            // Popular dropdown de setups
+            populateSetupDropdown('plantSetup', plant.setupId);
+
             document.getElementById('plantModalTitle').textContent = "Editar Planta";
             document.getElementById('plantId').value = plant.id;
             document.getElementById('plantName').value = plant.name;
-            document.getElementById('germinationDate').value = plant.germinationDate;
             document.getElementById('plantGenetics').value = plant.genetics || '';
+            document.getElementById('germinationDate').value = plant.germinationDate;
             
+            // Definir tipo de planta
             document.querySelectorAll('input[name="plantType"]').forEach(radio => {
                 radio.checked = (radio.value === plant.type);
             });
@@ -2831,49 +3886,343 @@
 
         // Fechar modal de planta
         function closePlantModal() {
+            if (history.state && history.state.modal === 'plantModal') {
+                history.back();
+            }
             document.getElementById('plantModal').style.display = 'none';
+        }
+
+        // Abrir modal para Mudança de Fase
+        function openPhaseChangeModal(plantId) {
+            history.pushState({ modal: 'phaseChangeModal' }, 'Mudar Fase', '#phasechange');
+            const plant = plants.find(p => p.id === plantId);
+            if (!plant) return;
+
+            document.getElementById('phaseChangePlantId').value = plantId;
+
+            // Obter fase atual
+            const currentPhase = getPlantPhase(plant);
+            const currentPhaseName = getPhaseName(currentPhase);
+            document.getElementById('currentPhaseText').textContent = currentPhaseName;
+
+            // Definir data atual como padrão
+            document.getElementById('phaseChangeDate').value = getLocalDateString();
+
+            document.getElementById('phaseChangeModal').style.display = 'flex';
+        }
+
+        // Fechar modal de mudança de fase
+        function closePhaseChangeModal() {
+            if (history.state && history.state.modal === 'phaseChangeModal') {
+                history.back();
+            }
+            document.getElementById('phaseChangeModal').style.display = 'none';
+        }
+
+        // Salvar mudança de fase
+        function savePhaseChange(e) {
+            e.preventDefault();
+            const plantId = document.getElementById('phaseChangePlantId').value;
+            const newPhase = document.getElementById('newPhaseSelect').value;
+            const changeDate = document.getElementById('phaseChangeDate').value;
+
+            const plant = plants.find(p => p.id === plantId);
+            if (!plant || !newPhase || !changeDate) return;
+
+            if (!plant.phaseChanges) plant.phaseChanges = [];
+            plant.phaseChanges.push({ date: changeDate, phase: newPhase });
+            plant.phaseChanges.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            journalEntries.push({ id: String(Date.now()), plantId: plant.id, date: changeDate, title: `Mudança de Fase para ${getPhaseName(newPhase)}`, notes: `A planta entrou na fase de ${getPhaseName(newPhase)}.`, createdAt: new Date().toISOString() });
+
+            saveData();
+            renderPlantList();
+            loadTimeline(plant.id);
+
+            // Se a planta alterada for a que está selecionada, atualiza o calendário
+            if (selectedPlant && selectedPlant.id === plant.id) {
+                renderWateringCalendar(plant);
+            }
+
+            closePhaseChangeModal();
+            showStatusBar('Fase da planta atualizada com sucesso!', 'success');
+        }
+
+        // Abrir modal para mudar setup
+        function openSetupChangeModal(plantId) {
+            history.pushState({ modal: 'setupChangeModal' }, 'Mudar Setup', '#setupchange');
+            const plant = plants.find(p => p.id === plantId);
+            if (!plant) return;
+
+            populateSetupDropdown('newPlantSetupSelect', plant.setupId);
+
+            document.getElementById('setupChangePlantId').value = plantId;
+
+            document.getElementById('setupChangeModal').style.display = 'flex';
+        }
+
+        // Fechar modal de mudar setup
+        function closeSetupChangeModal() {
+            if (history.state && history.state.modal === 'setupChangeModal') {
+                history.back();
+            }
+            document.getElementById('setupChangeModal').style.display = 'none';
+        }
+
+        // Salvar mudança de setup
+        function saveSetupChange(e) {
+            e.preventDefault();
+            const plantId = document.getElementById('setupChangePlantId').value;
+            const plant = plants.find(p => p.id === plantId);
+            if (!plant) return;
+
+            const newSetupId = document.getElementById('newPlantSetupSelect').value;
+            const oldSetup = setups.find(s => s.id === plant.setupId);
+            const newSetup = setups.find(s => s.id === newSetupId);
+
+            if (!newSetup || plant.setupId === newSetupId) {
+                showStatusBar('Nenhuma mudança de setup foi selecionada.', 'error');
+                return;
+            }
+
+            const oldSetupName = oldSetup ? oldSetup.name : 'Nenhum';
+            const newSetupName = newSetup.name;
+            let changeDescription = `Setup da planta alterado de "${oldSetupName}" para "${newSetupName}".`;
+
+            // Criar um novo evento no diário para registrar a mudança
+            const newEvent = {
+                id: String(Date.now()),
+                plantId: plant.id,
+                date: getLocalDateString(), // Data de hoje (local)
+                title: `Mudança de Setup para ${newSetupName}`,
+                notes: changeDescription.trim(),
+                createdAt: new Date().toISOString()
+            };
+            journalEntries.push(newEvent);
+
+            // BUG FIX: Atualizar o setupId da planta para refletir a mudança
+            plant.setupId = newSetupId;
+
+            // Atualizar dados e UI
+            saveData();
+            renderEnvironmentsSummary();
+            renderPlantList(); // Para atualizar o card da planta com as novas informações
+            loadTimeline(plant.id); // Para mostrar o novo evento
+            closeSetupChangeModal();
+            showStatusBar('Setup da planta atualizado com sucesso!', 'success');
+        }
+
+        // Abrir modal de informações da planta
+        async function openPlantInfoModal(plantId) {
+            history.pushState({ modal: 'plantInfoModal' }, 'Informações', '#info');
+            const plant = plants.find(p => p.id === plantId);
+            if (!plant) return;
+
+            const modal = document.getElementById('plantInfoModal');
+            const content = document.getElementById('plantInfoContent');
+            content.innerHTML = '<p>Carregando informações...</p>';
+            modal.style.display = 'flex';
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const germDate = parseLocalDate(plant.germinationDate);
+            const plantEntries = journalEntries.filter(e => e.plantId === plant.id);
+
+            // --- 1. Informações Gerais ---
+            const ageInDays = Math.floor((today - germDate) / (1000 * 60 * 60 * 24)) + 1;
+            const currentPhase = getPhaseName(getPlantPhase(plant));
+            const plantTypeDisplay = plant.type === 'auto' ? 'Automática' : 'Fotoperíodo';
+            const genetics = plant.genetics || 'Não especificada';
+            const currentSetup = setups.find(s => s.id === plant.setupId);
+
+            const generalInfoHtml = `
+                <div class="info-section">
+                    <h3><i class="fas fa-info-circle"></i> Informações Gerais</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><span class="label">Nome</span><span class="value">${plant.name}</span></div>
+                        <div class="info-item"><span class="label">Genética</span><span class="value">${genetics}</span></div>
+                        <div class="info-item"><span class="label">Germinação</span><span class="value">${germDate.toLocaleDateString('pt-BR')}</span></div>
+                        <div class="info-item"><span class="label">Tipo</span><span class="value">${plantTypeDisplay}</span></div>
+                        <div class="info-item"><span class="label">Idade</span><span class="value">${ageInDays} dias</span></div>
+                        <div class="info-item"><span class="label">Fase Atual</span><span class="value">${currentPhase}</span></div>
+                        ${currentSetup ? `
+                        <div class="info-item" style="grid-column: 1 / -1;">
+                            <span class="label">Setup Atual</span>
+                            <span class="value">${currentSetup.name} (${currentSetup.lighting} / ${currentSetup.environment} ${currentSetup.lightDuration ? `/ ${currentSetup.lightDuration}` : ''})</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            // --- 2. Resumo da Colheita ---
+            const harvestEntries = plantEntries.filter(e => e.action && e.action.includes('Colheita'));
+            const totalWetWeight = harvestEntries.reduce((sum, entry) => sum + (parseFloat(entry.wetWeight) || 0), 0);
+            const totalDryWeight = harvestEntries.reduce((sum, entry) => sum + (parseFloat(entry.dryWeight) || 0), 0);
+
+            let harvestSummaryHtml = `
+                <div class="info-section">
+                    <h3><i class="fas fa-cannabis"></i> Resumo da Colheita</h3>
+            `;
+            if (harvestEntries.length > 0) {
+                harvestSummaryHtml += `
+                    <div class="info-grid">
+                        <div class="info-item"><span class="label">Peso Úmido Total</span><span class="value">${totalWetWeight.toFixed(2)} g</span></div>
+                        <div class="info-item"><span class="label">Peso Seco Total</span><span class="value">${totalDryWeight.toFixed(2)} g</span></div>
+                    </div>
+                `;
+            } else {
+                harvestSummaryHtml += `<div class="info-list"><ul><li>Nenhuma colheita registrada.</li></ul></div>`;
+            }
+            harvestSummaryHtml += `</div>`;
+
+            // --- 3. Estatísticas de Rega ---
+            const wateringEntries = plantEntries.filter(e => e.watering);
+            const wateringCounts = wateringEntries.reduce((acc, entry) => {
+                acc[entry.watering] = (acc[entry.watering] || 0) + 1;
+                return acc;
+            }, {});
+
+            const wateringStatsHtml = `
+                <div class="info-section">
+                    <h3><i class="fas fa-tint"></i> Estatísticas de Rega</h3>
+                    <div class="info-list">
+                        <ul>
+                            <li>Total de Regas: <strong>${wateringEntries.length}</strong></li>
+                            ${Object.entries(wateringCounts).map(([type, count]) => `<li>${type}: <strong>${count}</strong></li>`).join('') || '<li>Nenhuma rega registrada.</li>'}
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            // --- 4. Histórico de Setup ---
+            const setupHistoryCalc = {};
+            const changeEvents = plantEntries
+                .filter(e => e.title && e.title.startsWith('Mudança de Setup para '))
+                .sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
+
+            let lastDate = germDate;
+            let lastSetupId = plant.setupId; 
+
+            const reversedEvents = [...changeEvents].reverse();
+            let initialSetupId = plant.setupId;
+            for (const event of reversedEvents) {
+                const oldSetupName = event.notes.match(/de "(.*?)" para/)?.[1];
+                const oldSetup = setups.find(s => s.name === oldSetupName);
+                if (oldSetup) {
+                    initialSetupId = oldSetup.id;
+                }
+            }
+
+            lastSetupId = initialSetupId;
+
+            changeEvents.forEach(event => {
+                const eventDate = parseLocalDate(event.date);
+                const duration = Math.round((eventDate - lastDate) / (1000 * 60 * 60 * 24));
+                if (duration > 0) {
+                    setupHistoryCalc[lastSetupId] = (setupHistoryCalc[lastSetupId] || 0) + duration;
+                }
+                const newSetupName = event.title.replace('Mudança de Setup para ', '');
+                const newSetup = setups.find(s => s.name === newSetupName);
+                lastSetupId = newSetup ? newSetup.id : lastSetupId;
+                lastDate = eventDate;
+            });
+
+            const finalDuration = Math.round((today - lastDate) / (1000 * 60 * 60 * 24));
+            if (finalDuration >= 0) { // Inclui 0 dias
+                setupHistoryCalc[lastSetupId] = (setupHistoryCalc[lastSetupId] || 0) + finalDuration + 1; // Adiciona 1 para incluir o dia atual
+            }
+
+            const setupHistoryHtml = `
+                <div class="info-section">
+                    <h3><i class="fas fa-cogs"></i> Histórico de Setup</h3>
+                    <div class="info-list">
+                        <ul>
+                            ${Object.entries(setupHistoryCalc).map(([setupId, days]) => {
+                                const setup = setups.find(s => s.id === setupId);
+                                return `<li>${setup ? setup.name : 'Desconhecido'}: <strong>${days} dia${days !== 1 ? 's' : ''}</strong></li>`;
+                            }).join('') || '<li>Nenhum histórico de setup.</li>'}
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            // --- 5. Ações Realizadas ---
+            const actionCounts = plantEntries.reduce((acc, entry) => {
+                if (entry.action) {
+                    entry.action.split(',').map(a => a.trim()).forEach(action => {
+                        if (action) acc[action] = (acc[action] || 0) + 1;
+                    });
+                }
+                return acc;
+            }, {});
+
+            const actionsHtml = `
+                <div class="info-section">
+                    <h3><i class="fas fa-tasks"></i> Ações Realizadas</h3>
+                    <div class="info-list">
+                        <ul>
+                            ${Object.entries(actionCounts).map(([action, count]) => `<li>${action}: <strong>${count}</strong></li>`).join('') || '<li>Nenhuma ação registrada.</li>'}
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            content.innerHTML = generalInfoHtml + harvestSummaryHtml + wateringStatsHtml + setupHistoryHtml + actionsHtml;
+        }
+
+        function closePlantInfoModal() {
+            if (history.state && history.state.modal === 'plantInfoModal') {
+                history.back();
+            }
+            document.getElementById('plantInfoModal').style.display = 'none';
         }
 
         // Salvar planta
         function savePlant(e) {
             e.preventDefault();
-
             const plantId = document.getElementById('plantId').value;
             const name = document.getElementById('plantName').value.trim();
             const germinationDate = document.getElementById('germinationDate').value;
-            const genetics = document.getElementById('plantGenetics').value.trim();
+            const setupId = document.getElementById('plantSetup').value;
             const type = document.querySelector('input[name="plantType"]:checked').value;
+            const genetics = document.getElementById('plantGenetics').value.trim();
 
-            if (!name || !germinationDate) {
+            if (!name || !germinationDate || !setupId) {
                 alert("Preencha todos os campos obrigatórios!");
                 return;
             }
 
             if (plantId) {
+                // Editar planta existente
                 const plantIndex = plants.findIndex(p => p.id === plantId);
                 if (plantIndex !== -1) {
                     plants[plantIndex] = {
                         ...plants[plantIndex],
                         name,
+                        genetics,
                         germinationDate,
-                        genetics: genetics || plants[plantIndex].genetics,
-                        type
+                        type,
+                        setupId: setupId
                     };
                 }
             } else {
+                // Criar nova planta
                 const newId = String(Date.now());
                 const newPlant = {
                     id: newId,
                     name,
+                    genetics,
                     type,
-                    genetics: genetics || "Híbrida",
                     germinationDate,
+                    setupId: setupId,
                     createdAt: new Date().toISOString()
                 };
                 plants.push(newPlant);
             }
             
             renderPlantList();
+            renderEnvironmentsSummary();
             closePlantModal();
             saveData();
             showStatusBar(`Planta ${plantId ? 'atualizada' : 'salva'} com sucesso!`, 'success');
@@ -2886,15 +4235,59 @@
             deletePlant(plantId);
         }
 
+        // Renderizar resumo dos ambientes
+        function renderEnvironmentsSummary() {
+            const summaryContainer = document.getElementById('environmentsSummary');
+            if (!summaryContainer) return;
+
+            summaryContainer.innerHTML = `
+                <h3><i class="fas fa-home"></i> Ambientes</h3>
+                <div class="environment-grid" id="environmentGrid"></div>
+            `;
+
+            const grid = document.getElementById('environmentGrid');
+
+            if (setups.length === 0) {
+                grid.innerHTML = '<p style="color: #b0b0b0;">Nenhum setup cadastrado. Crie um nas configurações.</p>';
+                return;
+            }
+
+            setups.forEach(setup => {
+                const plantCount = plants.filter(plant => plant.setupId === setup.id).length;
+
+                const item = document.createElement('div');
+                item.className = 'environment-item';
+                item.innerHTML = `
+                    <div class="environment-name">${setup.name}</div>
+                    <div class="environment-details">
+                        <i class="fas fa-seedling"></i> 
+                        <span class="environment-plant-count" style="font-weight: bold; color: var(--secondary);">${plantCount}</span> 
+                        planta${plantCount !== 1 ? 's' : ''}
+                    </div>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
         // Carregar linha do tempo
         async function loadTimeline(plantId) {
             const timelineContainer = document.getElementById("timelineContainer");
             timelineContainer.innerHTML = "";
+
+            // Adicionar classe para mostrar linha central
             timelineContainer.classList.add('has-plant');
+    
             const plant = plants.find(p => p.id === plantId);
             if (!plant) return;
+
+            // Obter registros da planta
             const plantEntries = journalEntries.filter(entry => entry.plantId === plantId);
+            
+            // Ordenar por data (mais antigo primeiro)
             plantEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Carregar galeria de fotos
+            loadPhotoGallery(plantId);
             
             if (plantEntries.length === 0) {
                 timelineContainer.innerHTML = `
@@ -2907,32 +4300,96 @@
                 return;
             }
             
+            // Obter a data atual
             const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const germDate = new Date(plant.germinationDate);
-            const ageInDays = Math.floor((today - germDate) / (1000 * 60 * 60 * 24));
+            today.setHours(0, 0, 0, 0); // Set to local midnight
+            
+            // Calcular idade da planta
+            const germDate = parseLocalDate(plant.germinationDate);
+            const ageInDays = Math.floor((today - germDate) / (1000 * 60 * 60 * 24)) + 1;
+            
+            // Adicionar evento de germinação
             const germinationEvent = {
                 id: "germination",
                 plantId: plant.id,
                 date: plant.germinationDate,
                 title: "Germinação",
-                description: "Semente plantada e início do processo de germinação",
+                notes: "Semente plantada e início do processo de germinação",
                 icon: "fas fa-seedling",
                 iconClass: "vegetative-icon"
             };
             
-            const timelineEvents = [germinationEvent, ...plantEntries].sort((a, b) => new Date(b.date) - new Date(a.date));
+            const initialSetup = setups.find(s => s.id === plant.setupId);
+            if(initialSetup) {
+                germinationEvent.lighting = initialSetup.lighting;
+                germinationEvent.environment = initialSetup.environment;
+            }
+            // Ordenar eventos do mais recente para o mais antigo (invertendo a ordem)
+const timelineEvents = [germinationEvent, ...plantEntries].sort((a, b) => new Date(b.date) - new Date(a.date));
 
+            // Gerar elementos da linha do tempo
             for (const entry of timelineEvents) {
-                const eventDate = new Date(entry.date);
-                const formattedDate = eventDate.toLocaleDateString("pt-BR", { timeZone: 'America/Sao_Paulo' });
-                const daysSinceGermination = Math.floor((eventDate - germDate) / (1000 * 60 * 60 * 24));
+                const eventDate = parseLocalDate(entry.date);
+                const formattedDate = eventDate.toLocaleDateString("pt-BR");
+                
+                const daysSinceGermination = Math.floor(
+                    (eventDate - germDate) / (1000 * 60 * 60 * 24) + 1
+                );
+                
+                // Verificar se é o evento atual (hoje)
                 const isCurrent = eventDate.getTime() === today.getTime();
+                
+                // Calcular fase da planta
                 const phase = getPlantPhase(plant, entry.date);
                 const phaseName = getPhaseName(phase);
                 const phaseClass = getPhaseClass(phase);
-                let actionsHtml = "";
                 
+                // --- Início da nova lógica para duração do setup ---
+                let setupDurationText = '';
+                if (entry.id === 'germination') {
+                    setupDurationText = 'Início do cultivo';
+                } else if (entry.lighting || entry.environment) {
+                    // 1. Coletar todos os pontos de mudança de setup (germinação e eventos de mudança)
+                    const setupChangePoints = [
+                        { date: plant.germinationDate },
+                        ...plantEntries.filter(e => e.title === "Mudança de Setup")
+                    ];
+
+                    // 2. Encontrar o ponto de mudança mais recente que ocorreu em ou antes da data do evento atual
+                    const relevantChangePoint = setupChangePoints
+                        .filter(p => parseLocalDate(p.date) <= eventDate)
+                        .sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date))[0];
+
+                    // 3. Calcular a duração
+                    if (relevantChangePoint) {
+                        const setupStartDate = parseLocalDate(relevantChangePoint.date);
+                        // A duração é da data de início do setup até a data do evento atual
+                        const durationInDays = Math.round((eventDate - setupStartDate) / (1000 * 60 * 60 * 24));
+                        
+                        if (durationInDays < 1) {
+                            setupDurationText = 'Setup iniciado neste dia';
+                        } else {
+                            setupDurationText = `Ativo por ${durationInDays} dia${durationInDays > 1 ? 's' : ''}`;
+                        }
+                    }
+                }
+                // --- Fim da nova lógica ---
+
+                // Gerar info de setup do evento
+                let setupInfoHtml = "";
+                if (entry.lighting || entry.environment) {
+                    setupInfoHtml = `
+                        <div class="event-setup-info">
+                            ${entry.lighting ? `<div><i class="fas fa-lightbulb"></i> ${entry.lighting}</div>` : ''}
+                            ${entry.lightDuration ? `<div><i class="fas fa-hourglass-half"></i> ${entry.lightDuration}</div>` : ''}
+                            ${entry.environment ? `<div><i class="fas fa-home"></i> ${entry.environment}</div>` : ''}
+                            ${setupDurationText ? `<div><i class="fas fa-clock"></i> ${setupDurationText}</div>` : ''}
+                        </div>
+                    `;
+                }
+
+                // Gerar ações
+                let actionsHtml = "";
                 if (entry.action) {
                     actionsHtml = `
                         <div class="actions-container">
@@ -2944,7 +4401,10 @@
                                 else if (action === "SCROG") iconClass = "fas fa-border-all";
                                 else if (action === "Transplante") iconClass = "fas fa-seedling";
                                 else if (action === "Defoliação") iconClass = "fas fa-leaf";
+                                else if (action === "Controle de Praga") iconClass = "fas fa-bug";
+                                else if (action === "Colheita") iconClass = "fas fa-cannabis";
                                 else iconClass = "fas fa-tasks";
+                                
                                 return `<div class="action-chip" data-action="${action}">
                                     <i class="${iconClass}"></i> ${action}
                                 </div>`;
@@ -2953,32 +4413,85 @@
                     `;
                 }
                 
+                // Gerar detalhes
                 let detailsHtml = "";
-                if (entry.ph || entry.ec || entry.temperature || entry.humidity || entry.watering) {
+                if (entry.ph || entry.ec || entry.temperature || entry.humidity || entry.watering || entry.wetWeight || entry.dryWeight) {
                     detailsHtml = `
                         <div class="event-details">
-                            ${entry.ph ? `<div class="detail-item"><div class="detail-label">pH</div><div class="detail-value">${entry.ph}</div></div>` : ""}
-                            ${entry.ec ? `<div class="detail-item"><div class="detail-label">EC (mS/cm)</div><div class="detail-value">${entry.ec}</div></div>` : ""}
-                            ${entry.temperature ? `<div class="detail-item"><div class="detail-label">Temperatura</div><div class="detail-value">${entry.temperature}°C</div></div>` : ""}
-                            ${entry.humidity ? `<div class="detail-item"><div class="detail-label">Umidade</div><div class="detail-value">${entry.humidity}%</div></div>` : ""}
-                            ${entry.watering ? `<div class="detail-item"><div class="detail-label">Tipo de Rega</div><div class="detail-value">${entry.watering}</div></div>` : ""}
+                            ${entry.ph ? `
+                            <div class="detail-item">
+                                <div class="detail-label">pH</div>
+                                <div class="detail-value">${entry.ph}</div>
+                            </div>
+                            ` : ""}
+                            
+                            ${entry.ec ? `
+                            <div class="detail-item">
+                                <div class="detail-label">EC (mS/cm)</div>
+                                <div class="detail-value">${entry.ec}</div>
+                            </div>
+                            ` : ""}
+                            
+                            ${entry.temperature ? `
+                            <div class="detail-item">
+                                <div class="detail-label">Temperatura</div>
+                                <div class="detail-value">${entry.temperature}°C</div>
+                            </div>
+                            ` : ""}
+                            
+                            ${entry.humidity ? `
+                            <div class="detail-item">
+                                <div class="detail-label">Umidade</div>
+                                <div class="detail-value">${entry.humidity}%</div>
+                            </div>
+                            ` : ""}
+                            
+                            ${entry.watering ? `
+                            <div class="detail-item">
+                                <div class="detail-label">Tipo de Rega</div>
+                                <div class="detail-value">${entry.watering}</div>
+                            </div>
+                            ` : ""}
+
+                            ${entry.wetWeight ? `
+                            <div class="detail-item">
+                                <div class="detail-label">Peso Úmido</div>
+                                <div class="detail-value">${entry.wetWeight}g</div>
+                            </div>
+                            ` : ""}
+
+                            ${entry.dryWeight ? `
+                            <div class="detail-item">
+                                <div class="detail-label">Peso Seco</div>
+                                <div class="detail-value">${entry.dryWeight}g</div>
+                            </div>
+                            ` : ""}
                         </div>
                     `;
                 }
                 
+                // Gerar imagens
                 let imagesHtml = "";
                 let imageUrl = "";
                 
                 if (entry.imageFileName && permissionGranted) {
+                    // Carregar do sistema de arquivos
                     imageUrl = await loadImageFromFileSystem(entry.imageFileName);
                 }
                 
                 if (!imageUrl && entry.imageData) {
+                    // Fallback para base64
                     imageUrl = entry.imageData;
                 }
                 
                 if (imageUrl) {
-                    imagesHtml = `<div class="event-images"><img src="${imageUrl}" class="event-image" alt="Imagem do evento"></div>`;
+                    imagesHtml = `
+                        <div class="event-images">
+                            <img src="${imageUrl}" 
+                                 class="event-image" 
+                                 alt="Imagem do evento">
+                        </div>
+                    `;
                 }
                 
                 const eventElement = document.createElement("div");
@@ -3000,12 +4513,20 @@
                             </div>
                             <div class="event-date">${formattedDate}</div>
                         </div>
+                        
                         <div class="event-title">${entry.title || "Registro"}</div>
                         <div class="event-phase ${phaseClass}">${phaseName}</div>
+                        
+                        ${setupInfoHtml}
+
                         ${actionsHtml}
-                        <div class="event-description">${entry.description || entry.notes || "Sem descrição"}</div>
+                        
+                        <div class="event-description">${entry.description || (entry.notes || '').replace(/\n/g, '<br>') || "Sem descrição"}</div>
+                        
                         ${detailsHtml}
+                        
                         ${imagesHtml}
+                        
                         <div style="margin-top: 15px; font-size: 0.95rem; color: #b0b0b0;">
                             <i class="fas fa-calendar-day"></i> Dia ${daysSinceGermination} de crescimento
                         </div>
@@ -3014,6 +4535,7 @@
                 
                 timelineContainer.appendChild(eventElement);
                 
+                // Configurar clique nas imagens
                 if (imagesHtml) {
                     const img = eventElement.querySelector(".event-image");
                     if (img) {
@@ -3024,6 +4546,7 @@
                     }
                 }
                 
+                // Configurar botões de ação
                 eventElement.querySelector('.edit-event-btn').addEventListener('click', function() {
                     editEvent(this.dataset.id);
                 });
@@ -3033,7 +4556,8 @@
                 });
             }
             
-            const todayEvent = document.createElement("div");
+            // Adicionar evento atual (hoje)
+         //  const todayEvent = document.createElement("div");
             todayEvent.className = "timeline-event";
             todayEvent.innerHTML = `
                 <div class="event-card current">
@@ -3043,8 +4567,10 @@
                         </div>
                         <div class="event-date">Hoje</div>
                     </div>
+                    
                     <div class="event-title">Estado Atual</div>
                     <div class="event-description">Esta é a situação atual da planta</div>
+                    
                     <div style="margin-top: 15px; font-size: 0.95rem; color: #b0b0b0;">
                         <i class="fas fa-calendar-day"></i> Dia ${ageInDays} de crescimento
                     </div>
@@ -3053,26 +4579,172 @@
             timelineContainer.appendChild(todayEvent);
         }
 
+        // Carregar galeria de fotos
+        async function loadPhotoGallery(plantId) {
+            const photoGrid = document.getElementById('photoGrid');
+            photoGrid.innerHTML = '';
+            
+            const plant = plants.find(p => p.id === plantId);
+            if (!plant) return;
+            
+            // Obter entradas com imagens
+            const entriesWithPhotos = journalEntries.filter(entry => 
+                entry.plantId === plantId && 
+                (entry.imageData || entry.imageFileName)
+            );
+            
+            if (entriesWithPhotos.length === 0) {
+                document.getElementById('photoGallery').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('photoGallery').style.display = 'block';
+            
+            // Ordenar do mais antigo para o mais recente (ordem crescente)
+            entriesWithPhotos.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            // Atualizar lista de fotos para a galeria ampliada
+            currentGalleryPhotos = [];
+            
+            for (const entry of entriesWithPhotos) {
+                let imageUrl = '';
+                
+                // Tentar carregar do sistema de arquivos primeiro
+                if (entry.imageFileName && permissionGranted) {
+                    imageUrl = await loadImageFromFileSystem(entry.imageFileName);
+                }
+                
+                // Fallback para base64
+                if (!imageUrl && entry.imageData) {
+                    imageUrl = entry.imageData;
+                }
+                
+                if (imageUrl) {
+                    const photoItem = document.createElement('div');
+                    photoItem.className = 'photo-item';
+                    
+                    const img = document.createElement('img');
+                    img.src = imageUrl;
+                    img.alt = `Foto de ${entry.date}`;
+                    photoItem.appendChild(img);
+                    photoGrid.appendChild(photoItem);
+                    
+                    // Adicionar à lista de fotos para a galeria ampliada
+                    currentGalleryPhotos.push({
+                        src: imageUrl,
+                        date: entry.date,
+                        title: entry.title || 'Registro'
+                    });
+                    
+                    // Configurar clique para abrir a galeria ampliada
+                    photoItem.addEventListener('click', () => {
+                        const index = currentGalleryPhotos.findIndex(p => p.src === imageUrl);
+                        if (index !== -1) {
+                            openGalleryModal(index);
+                        }
+                    });
+                }
+            }
+        }
+
+        // Abrir galeria ampliada
+        function openGalleryModal(index) {
+            history.pushState({ modal: 'galleryModal' }, 'Galeria', '#gallery');
+            if (currentGalleryPhotos.length === 0) return;
+            
+            currentGalleryIndex = index;
+            updateGalleryModal();
+            document.getElementById('galleryModal').style.display = 'flex';
+        }
+
+        // Fechar galeria ampliada
+        function closeGalleryModal() {
+            if (history.state && history.state.modal === 'galleryModal') {
+                history.back();
+            }
+            document.getElementById('galleryModal').style.display = 'none';
+        }
+
+        // Atualizar galeria ampliada
+        function updateGalleryModal() {
+            if (currentGalleryPhotos.length === 0) return;
+            
+            const photo = currentGalleryPhotos[currentGalleryIndex];
+            const galleryMainImage = document.getElementById('galleryMainImage');
+            const galleryPhotoInfo = document.getElementById('galleryPhotoInfo');
+            const galleryThumbnails = document.getElementById('galleryThumbnails');
+            
+            galleryMainImage.src = photo.src;
+            galleryPhotoInfo.textContent = `${photo.title} - ${parseLocalDate(photo.date).toLocaleDateString('pt-BR')}`;
+            
+            // Atualizar miniaturas
+            galleryThumbnails.innerHTML = '';
+            
+            currentGalleryPhotos.forEach((p, i) => {
+                const thumb = document.createElement('div');
+                thumb.className = `gallery-thumbnail ${i === currentGalleryIndex ? 'active' : ''}`;
+                thumb.innerHTML = `<img src="${p.src}" alt="Miniatura">`;
+                
+                thumb.addEventListener('click', () => {
+                    currentGalleryIndex = i;
+                    updateGalleryModal();
+                });
+                
+                galleryThumbnails.appendChild(thumb);
+            });
+        }
+
+        // Navegar entre fotos na galeria ampliada
+        function navigateGallery(direction) {
+            currentGalleryIndex += direction;
+            
+            // Verificar limites
+            if (currentGalleryIndex < 0) {
+                currentGalleryIndex = currentGalleryPhotos.length - 1;
+            } else if (currentGalleryIndex >= currentGalleryPhotos.length) {
+                currentGalleryIndex = 0;
+            }
+            
+            updateGalleryModal();
+        }
+
         // Determinar fase da planta com períodos de transição
         function getPlantPhase(plant, entryDate) {
             if (!plant.germinationDate) return "";
-            const germDate = new Date(plant.germinationDate);
-            const refDate = entryDate ? new Date(entryDate) : new Date();
+
+            const germDate = parseLocalDate(plant.germinationDate);
+            const refDate = entryDate ? parseLocalDate(entryDate) : new Date();
+            refDate.setHours(0, 0, 0, 0); // Normaliza para meia-noite local para consistência
+
+            // 1. Verifica se há mudanças de fase manuais e encontra a mais relevante
+            if (plant.phaseChanges && plant.phaseChanges.length > 0) {
+                const relevantChange = plant.phaseChanges
+                    .filter(change => parseLocalDate(change.date) <= refDate)
+                    .sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date))[0];
+
+                if (relevantChange) {
+                    return relevantChange.phase;
+                }
+            }
+
+            // 2. Se não houver mudança manual aplicável, usa a lógica baseada na idade
             const ageInDays = Math.floor((refDate - germDate) / (1000 * 60 * 60 * 24));
-            
+
             if (plant.type === "auto") {
+                // Automáticas têm fases mais rápidas e definidas
                 if (ageInDays < 30) return "vegetative";
-                if (ageInDays < 35) return "transition";
+                if (ageInDays < 35) return "transition"; // Transição vegetativo-floração
                 if (ageInDays < 50) return "flowering";
-                if (ageInDays < 55) return "transition";
+                if (ageInDays < 55) return "transition"; // Transição floração-frutificação
                 if (ageInDays < 65) return "fruiting";
                 return "harvest";
             } else {
+                // Fotoperíodo têm fases mais longas e transições mais graduais
                 if (ageInDays < 30) return "vegetative";
-                if (ageInDays < 37) return "transition";
+                if (ageInDays < 37) return "transition"; // Transição vegetativo-pré-floração
                 if (ageInDays < 49) return "preflower";
                 if (ageInDays < 84) return "flowering";
-                if (ageInDays < 99) return "transition";
+                if (ageInDays < 99) return "transition"; // Transição floração-frutificação
                 if (ageInDays < 112) return "fruiting";
                 return "harvest";
             }
@@ -3098,28 +4770,160 @@
                 case "preflower": return "phase-preflower";
                 case "flowering": return "phase-flowering";
                 case "fruiting": return "phase-fruiting";
-                case "transition": return "phase-transition";
-                default: return "";
+                default: return "phase-vegetative";
             }
         }
 
         // Exportar linha do tempo
-        function exportTimeline() {
+        async function generatePdfWithOptions(e) {
+            if (e) e.preventDefault(); // Prevenir submit do formulário
+
             if (!selectedPlant) {
-                alert("Selecione uma planta primeiro");
+                showStatusBar('Selecione uma planta primeiro.', 'error');
                 return;
             }
-            
-            alert("Exportação para PDF iniciada!\n(Em uma implementação real, isso geraria um PDF com todos os dados da linha do tempo)");
-            document.getElementById("exportTimelineBtn").innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando PDF...';
-            setTimeout(() => {
-                document.getElementById("exportTimelineBtn").innerHTML = '<i class="fas fa-file-pdf"></i> Exportar PDF';
-                alert("PDF gerado com sucesso!");
-            }, 2000);
+
+            // Coletar opções do modal
+            const options = {
+                title: document.getElementById('pdfTitle').value.trim() || `Diário de Cultivo: ${selectedPlant.name}`,
+                includeDetails: document.getElementById('pdfIncludeDetails').checked,
+                includeImages: document.getElementById('pdfIncludeImages').checked,
+                includeSetup: document.getElementById('pdfIncludeSetup').checked,
+            };
+
+            const btn = document.getElementById('exportTimelineBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando PDF...';
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+
+                const plant = selectedPlant;
+                const plantEntries = journalEntries
+                    .filter(entry => entry.plantId === plant.id)
+                    .sort((a, b) => new Date(b.date) - new Date(a.date)); // Do mais recente para o mais antigo
+
+                // --- Cabeçalho do PDF ---
+                doc.setFontSize(20);
+                doc.text(options.title, 15, 20);
+                doc.setFontSize(12);
+                doc.text(`Tipo: ${plant.type === 'auto' ? 'Automática' : 'Fotoperíodo'}`, 15, 30);
+                doc.text(`Germinação: ${new Date(plant.germinationDate).toLocaleDateString('pt-BR')}`, 15, 35);
+                doc.line(15, 40, 195, 40); // Linha horizontal
+
+                let yPosition = 50;
+                const pageHeight = doc.internal.pageSize.getHeight();
+                const margin = 15;
+
+                // --- Loop pelos registros ---
+                for (const entry of plantEntries) {
+                    const tempContainer = document.createElement('div');
+                    tempContainer.style.position = 'absolute';
+                    tempContainer.style.left = '-9999px';
+                    tempContainer.style.width = '180mm';
+                    tempContainer.style.padding = '10px';
+                    tempContainer.style.background = 'white';
+                    tempContainer.style.color = 'black';
+                    tempContainer.style.fontFamily = 'sans-serif';
+                    tempContainer.style.border = '1px solid #ccc';
+                    tempContainer.style.borderRadius = '5px';
+
+                    // --- Informações do Evento ---
+                    const eventDate = parseLocalDate(entry.date);
+                    const germDate = parseLocalDate(plant.germinationDate);
+                    const daysSinceGermination = Math.floor((eventDate - germDate) / (1000 * 60 * 60 * 24)) + 1;
+                    const phase = getPlantPhase(plant, entry.date);
+                    const phaseName = getPhaseName(phase);
+
+                    let entryHtml = `
+                        <h3 style="font-size: 14px; margin-bottom: 5px;">${entry.title || 'Registro'} - ${parseLocalDate(entry.date).toLocaleDateString('pt-BR')}</h3>
+                        <p style="font-size: 11px; color: #555; margin-bottom: 8px;">
+                            <strong>Dia ${daysSinceGermination}</strong> | Fase: ${phaseName}
+                        </p>
+                        ${options.includeSetup ? `<p style="font-size: 11px; margin-bottom: 8px;"><strong>Setup:</strong> Iluminação: ${entry.lighting || 'N/A'}, Ambiente: ${entry.environment || 'N/A'}, Tempo de Luz: ${entry.lightDuration || 'N/A'}</p>` : ''}
+                        ${entry.action ? `<p style="font-size: 12px; margin-bottom: 8px;"><strong>Ações:</strong> ${entry.action}</p>` : ''}
+                        <p style="font-size: 12px; margin-bottom: 8px;">${(entry.notes || 'Sem observações.').replace(/\n/g, '<br>')}</p>
+                    `;
+
+                    // --- Tabela de Detalhes ---
+                    if (options.includeDetails) {
+                        const details = {
+                            'pH': entry.ph,
+                            'EC (mS/cm)': entry.ec,
+                            'Temp.': entry.temperature ? `${entry.temperature}°C` : null,
+                            'Umid.': entry.humidity ? `${entry.humidity}%` : null,
+                            'Rega': entry.watering,
+                            'Peso Úmido': entry.wetWeight ? `${entry.wetWeight}g` : null,
+                            'Peso Seco': entry.dryWeight ? `${entry.dryWeight}g` : null,
+                        };
+
+                        const headers = Object.keys(details).filter(key => details[key] != null && details[key] !== '');
+                        const values = headers.map(key => details[key]);
+
+                        if (headers.length > 0) {
+                            entryHtml += `<table style="width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 8px;">
+                                <tr style="background: #eee;">
+                                    ${headers.map(h => `<th style="border: 1px solid #ddd; padding: 4px;">${h}</th>`).join('')}
+                                </tr>
+                                <tr>
+                                    ${values.map(v => `<td style="border: 1px solid #ddd; padding: 4px; text-align: center;">${v}</td>`).join('')}
+                                </tr>
+                            </table>`;
+                        }
+                    }
+
+                    // --- Imagem ---
+                    if (options.includeImages) {
+                        // Carrega a imagem de qualquer fonte (filesystem ou base64)
+                        const imageUrl = await getImageDataUrl(entry);
+                        if (imageUrl) {
+                            entryHtml += `<img src="${imageUrl}" style="max-width: 100%; border-radius: 5px; margin-top: 5px;">`;
+                        }
+                    }
+
+                    tempContainer.innerHTML = entryHtml;
+                    document.body.appendChild(tempContainer);
+
+                    const canvas = await html2canvas(tempContainer, {
+                        scale: 2,
+                        useCORS: true,
+                        backgroundColor: '#ffffff' // Fundo branco para evitar transparências
+                    });
+                    const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                    const imgHeight = (canvas.height * 180) / canvas.width;
+
+                    if (yPosition + imgHeight > pageHeight - margin) {
+                        doc.addPage();
+                        yPosition = margin;
+                    }
+
+                    doc.addImage(imgData, 'JPEG', margin, yPosition, 180, imgHeight);
+                    yPosition += imgHeight + 5;
+
+                    document.body.removeChild(tempContainer);
+                }
+
+                closePdfOptionsModal();
+                // Em vez de salvar diretamente, gera um data URI para a pré-visualização
+                const pdfDataUri = doc.output('datauristring');
+                const fileName = `diario_${plant.name.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+
+                openPdfPreviewModal(pdfDataUri, fileName);
+                showStatusBar('Pré-visualização do PDF gerada com sucesso!', 'success');
+
+            } catch (error) {
+                console.error("Erro ao gerar PDF:", error);
+                showStatusBar('Ocorreu um erro ao gerar o PDF.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-file-pdf"></i> Exportar PDF';
+            }
         }
 
         // Abrir modal de novo evento
         function addNewEvent() {
+            history.pushState({ modal: 'eventModal' }, 'Novo Registro', '#event');
             if (!selectedPlant) {
                 alert("Selecione uma planta primeiro");
                 return;
@@ -3128,18 +4932,28 @@
             document.getElementById('eventModalTitle').textContent = "Adicionar Registro";
             document.getElementById('eventId').value = '';
             document.getElementById('deleteEventBtn').style.display = 'none';
-            const today = new Date();
-            document.getElementById('eventDate').value = today.toISOString().split('T')[0];
+
+            // Limpar campos
             document.getElementById('eventForm').reset();
+
+            // Definir data atual como padrão APÓS o reset
+            setTodayAsDefaultDate();
+
             document.getElementById('imagePreview').innerHTML = '';
+            document.getElementById('harvestFields').style.display = 'none';
+
+            // Resetar botões de ação
             document.querySelectorAll('.action-button').forEach(btn => {
                 btn.classList.remove('selected');
             });
+            
+            // Abrir modal
             document.getElementById('eventModal').style.display = 'flex';
         }
 
         // Abrir modal para editar evento
         function editEvent(eventId) {
+            history.pushState({ modal: 'eventModal' }, 'Editar Registro', '#event');
             const event = journalEntries.find(e => e.id === eventId);
             if (!event) return;
             
@@ -3152,11 +4966,15 @@
             document.getElementById('humidity').value = event.humidity || '';
             document.getElementById('wateringType').value = event.watering || '';
             document.getElementById('notes').value = event.notes || '';
+            document.getElementById('wetWeight').value = event.wetWeight || '';
+            document.getElementById('dryWeight').value = event.dryWeight || '';
             
+            // Resetar botões de ação
             document.querySelectorAll('.action-button').forEach(btn => {
                 btn.classList.remove('selected');
             });
             
+            // Selecionar ações existentes
             if (event.action) {
                 event.action.split(", ").forEach(action => {
                     const actionButton = [...document.querySelectorAll('.action-button')]
@@ -3167,6 +4985,14 @@
                 });
             }
             
+            // Mostrar/ocultar campos de colheita
+            const harvestFields = document.getElementById('harvestFields');
+            const harvestActionSelected = event.action && event.action.includes('Colheita');
+            if (harvestFields) {
+                harvestFields.style.display = harvestActionSelected ? 'block' : 'none';
+            }
+
+            // Mostrar preview de imagem se existir
             if (event.imageData) {
                 document.getElementById('imagePreview').innerHTML = `
                     <img src="${event.imageData}" alt="Preview da imagem" style="max-width: 100%; border-radius: 8px; margin-top: 10px;">
@@ -3215,15 +5041,18 @@
         // Validar data do evento
         function validateEventDate(dateStr) {
             if (!selectedPlant) return false;
-            const eventDate = new Date(dateStr);
+            
+            const eventDate = parseLocalDate(dateStr);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
+            // Verificar se a data é no futuro
             if (eventDate > today) {
                 showValidationError('eventDate', 'Não é possível registrar eventos no futuro');
                 return false;
             }
             
+            // Verificar se a data é antes da germinação
             const germDate = new Date(selectedPlant.germinationDate);
             if (eventDate < germDate) {
                 showValidationError('eventDate', 'A data não pode ser anterior à germinação');
@@ -3236,18 +5065,22 @@
         // Salvar evento
         async function saveEvent(e) {
             e.preventDefault();
-            
+
             if (!selectedPlant) {
                 alert("Selecione uma planta primeiro");
                 return;
             }
-            
+
+            // Resetar erros de validação
             resetValidationErrors();
+
+            // Validar data
             const eventDate = document.getElementById('eventDate').value;
             if (!validateEventDate(eventDate)) {
                 return;
             }
-            
+
+            // Obter valores do formulário
             const eventId = document.getElementById('eventId').value;
             const ph = document.getElementById('ph').value;
             const ec = document.getElementById('ec').value;
@@ -3255,28 +5088,54 @@
             const humidity = document.getElementById('humidity').value;
             const wateringType = document.getElementById('wateringType').value;
             const notes = document.getElementById('notes').value;
+            const wetWeight = document.getElementById('wetWeight').value;
+            const dryWeight = document.getElementById('dryWeight').value;
+
+            // Obter o setup atual para snapshot no evento
+            const currentSetup = setups.find(s => s.id === selectedPlant.setupId);
+            const currentLighting = currentSetup ? currentSetup.lighting : 'Não definido';
+            const currentEnvironment = currentSetup ? currentSetup.environment : 'Não definido';
+                const currentLightDuration = currentSetup ? (currentSetup.lightDuration || '') : '';
+
+            // Obter ações selecionadas
             const actions = Array.from(document.querySelectorAll('.action-button.selected'))
                          .map(btn => btn.dataset.action);
+
+            // Processar imagem
             let imageFileName = null;
             let imageData = null;
             const fileInput = document.getElementById('eventImage');
-            
             if (fileInput.files.length > 0) {
                 const imageFile = fileInput.files[0];
-                if (permissionGranted) {
-                    imageFileName = await saveImageToFileSystem(imageFile);
+
+                // Tenta salvar no sistema de arquivos primeiro
+                if (permissionGranted && directoryHandle) {
+                    imageFileName = await saveImageToFileSystem(imageFile, selectedPlant, eventDate);
                 }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    imageData = e.target.result;
-                };
-                reader.readAsDataURL(imageFile);
+
+                // Se não foi possível salvar no sistema de arquivos (sem permissão ou erro), usa o fallback para base64.
+                // Isso evita encher o localStorage desnecessariamente.
+                if (!imageFileName) {
+                    try {
+                        imageData = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = () => resolve(reader.result);
+                            reader.onerror = error => reject(error);
+                            reader.readAsDataURL(imageFile);
+                        });
+                    } catch (error) {
+                        console.error("Erro ao ler o arquivo de imagem:", error);
+                        showStatusBar('Falha ao processar a imagem.', 'error');
+                        return;
+                    }
+                }
             }
-            
+
             if (eventId) {
+                // Editar evento existente
                 const eventIndex = journalEntries.findIndex(e => e.id === eventId);
                 if (eventIndex !== -1) {
-                    journalEntries[eventIndex] = {
+                    const updatedEvent = {
                         ...journalEntries[eventIndex],
                         date: eventDate,
                         ph: ph || undefined,
@@ -3286,11 +5145,20 @@
                         watering: wateringType || undefined,
                         action: actions.join(', ') || undefined,
                         notes: notes || undefined,
-                        imageFileName: imageFileName || journalEntries[eventIndex].imageFileName,
-                        imageData: imageData || journalEntries[eventIndex].imageData
+                        wetWeight: wetWeight || undefined,
+                        dryWeight: dryWeight || undefined
                     };
+
+                    // Se uma nova imagem foi adicionada, ela substitui a antiga.
+                    if (fileInput.files.length > 0) {
+                        updatedEvent.imageFileName = imageFileName;
+                        updatedEvent.imageData = imageData;
+                    }
+
+                    journalEntries[eventIndex] = updatedEvent;
                 }
             } else {
+                // Criar novo evento
                 const newId = String(Date.now());
                 const newEvent = {
                     id: newId,
@@ -3303,13 +5171,18 @@
                     watering: wateringType || undefined,
                     action: actions.join(', ') || undefined,
                     notes: notes || undefined,
-                    imageFileName: imageFileName,
-                    imageData: imageData,
+                    imageFileName: imageFileName, // Será null se não salvou no FS
+                    imageData: imageData,         // Será null se salvou no FS
+                    wetWeight: wetWeight || undefined,
+                    dryWeight: dryWeight || undefined,
+                    lighting: currentLighting,
+                    environment: currentEnvironment,
+                        lightDuration: currentLightDuration,
                     createdAt: new Date().toISOString()
                 };
                 journalEntries.push(newEvent);
             }
-            
+
             if (selectedPlant) {
                 loadTimeline(selectedPlant.id);
                 renderWateringCalendar(selectedPlant);
@@ -3321,38 +5194,93 @@
 
         // Fechar modal de evento
         function closeEventModal() {
+            if (history.state && history.state.modal === 'eventModal') {
+                history.back();
+            }
             document.getElementById('eventModal').style.display = 'none';
         }
 
         // Fechar modal de imagem
         function closeImageModal() {
+            if (history.state && history.state.modal === 'imageModal') {
+                history.back();
+            }
             document.getElementById("imageModal").style.display = "none";
         }
         
+        // --- LÓGICA DE ARRASTAR E SOLTAR (SORTABLEJS) ---
+        function initSortable() {
+            const plantList = document.getElementById('plantList');
+            if (plantList) {
+                Sortable.create(plantList, {
+                    handle: '.plant-drag-handle', // Define o elemento que inicia o arrasto
+                    animation: 150, // Animação suave ao mover
+                    ghostClass: 'sortable-ghost', // Estilo do placeholder
+                    chosenClass: 'sortable-chosen', // Estilo do item sendo arrastado
+                    forceFallback: true, // Essencial para uma melhor experiência em dispositivos móveis
+                    scroll: true, // Habilita o auto-scroll
+                    scrollSensitivity: 70, // Distância em pixels da borda para iniciar o scroll
+                    scrollSpeed: 15, // Velocidade do scroll
+                    onEnd: (evt) => {
+                        // evt.oldIndex e evt.newIndex são os índices antes e depois da movimentação
+                        
+                        // Reordena o array 'plants' para refletir a mudança no DOM
+                        const movedPlant = plants.splice(evt.oldIndex, 1)[0];
+                        plants.splice(evt.newIndex, 0, movedPlant);
+                        
+                        // Salva a nova ordem no localStorage
+                        saveData();
+                        
+                        // Fornece feedback ao usuário
+                        showStatusBar('Ordem das plantas atualizada!', 'success');
+                    }
+                });
+            }
+        }
+
         // Salvar dados no localStorage
         function saveData() {
-            localStorage.setItem('plants', JSON.stringify(plants));
-            localStorage.setItem('journalEntries', JSON.stringify(journalEntries));
-            localStorage.setItem('savedDirectory', savedDirectory);
-            localStorage.setItem('npkSettings', JSON.stringify(npkSettings));
+            try {
+                localStorage.setItem('setups', JSON.stringify(setups));
+                localStorage.setItem('plants', JSON.stringify(plants));
+                localStorage.setItem('journalEntries', JSON.stringify(journalEntries));
+                localStorage.setItem('savedDirectory', savedDirectory);
+                localStorage.setItem('npkSettings', JSON.stringify(npkSettings));
+            } catch (e) {
+                console.error("Erro ao salvar dados no localStorage:", e);
+                showStatusBar('Erro ao salvar: o armazenamento pode estar cheio. Tente remover imagens antigas.', 'error');
+            }
         }
 
         // Carregar dados
         async function loadData() {
             const savedPlants = localStorage.getItem('plants');
+            const savedSetups = localStorage.getItem('setups');
             const savedEntries = localStorage.getItem('journalEntries');
             const savedDir = localStorage.getItem('savedDirectory');
             const savedNPK = localStorage.getItem('npkSettings');
             
-            if (savedPlants) plants = JSON.parse(savedPlants);
+            if (savedPlants) {
+                const loadedPlants = JSON.parse(savedPlants);
+                // Script de migração para garantir compatibilidade com versões antigas de dados.
+                // Garante que todas as plantas tenham os campos 'lighting' e 'environment'.
+                plants = loadedPlants.map(plant => ({
+                    ...plant,
+                    lighting: plant.lighting || 'Não definido',
+                    environment: plant.environment || 'Não definido'
+                }));
+            }
+            if (savedSetups) setups = JSON.parse(savedSetups);
             if (savedEntries) journalEntries = JSON.parse(savedEntries);
             if (savedDir) savedDirectory = savedDir;
             if (savedNPK) npkSettings = JSON.parse(savedNPK);
             
+            // Carregar configurações de NPK do IndexedDB
             const savedNPKFromDB = await loadNPKSettingsFromDB();
             if (savedNPKFromDB) {
                 npkSettings = savedNPKFromDB;
             } else if (!savedNPK) {
+                // Configurações padrão
                 npkSettings = {
                     vegetative: { n: 10, p: 5, k: 5 },
                     flowering: { n: 5, p: 10, k: 15 },
@@ -3364,13 +5292,22 @@
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', async function() {
+            // Carregar dados salvos
+
+            // Adiciona um estado inicial ao histórico para "capturar" o botão voltar.
+            // Isso garante que haja sempre um estado para onde "voltar" dentro do app.
+            history.pushState({ app_root: true }, '');
+
             await loadData();
-            const hasPermission = await initFileSystem();
             
-            if (!hasPermission) {
+            // Inicializar sistema de arquivos
+            permissionGranted = await initFileSystem();
+            
+            // Se não houver permissão persistida, solicitar ao usuário
+            if (!permissionGranted) {
                 document.getElementById('permissionRequest').style.display = 'flex';
             }
-            
+            // Dados de exemplo para demonstração (apenas se não houver dados salvos)
             if (plants.length === 0 && journalEntries.length === 0) {
                 plants = [
                     {
@@ -3378,6 +5315,8 @@
                         name: "Purple Haze #1",
                         type: "auto",
                         genetics: "Sativa",
+                        lighting: "LED 150W",
+                        environment: "Grow 60x60",
                         germinationDate: "2023-08-15",
                         createdAt: "2023-08-10T12:00:00Z"
                     },
@@ -3386,6 +5325,8 @@
                         name: "Northern Lights",
                         type: "photo",
                         genetics: "Índica",
+                        lighting: "HPS 400W",
+                        environment: "Outdoor",
                         germinationDate: "2023-09-01",
                         createdAt: "2023-08-25T12:00:00Z"
                     }
@@ -3421,25 +5362,124 @@
                         createdAt: "2023-09-05T10:15:00Z"
                     }
                 ];
+                
+                // Salvar dados iniciais
                 saveData();
             }
             
             renderPlantList();
+            renderEnvironmentsSummary();
             setupEventListeners();
+            initSortable(); // Habilita o arrastar e soltar na lista de plantas
             updateCarouselNav();
             setTodayAsDefaultDate();
-            window.addEventListener('beforeunload', saveData);
-
-            // Registrar o Service Worker para PWA
+            updateFolderIndicator();
+            
+            // REGISTRO DO SERVICE WORKER PARA PWA
             if ('serviceWorker' in navigator) {
-                try {
-                    const registration = await navigator.serviceWorker.register('/service-worker.js');
-                    console.log('Service Worker registrado com sucesso no escopo:', registration.scope);
-                } catch (error) {
-                    console.error('Falha ao registrar o Service Worker:', error);
-                }
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado com sucesso:', registration);
+                    })
+                    .catch(error => {
+                        console.log('Falha ao registrar o Service Worker:', error);
+                    });
             }
         });
+
+        // --- LÓGICA DE GERENCIAMENTO DE SETUPS ---
+
+        function renderSetupsList() {
+            const listContainer = document.getElementById('setupsList');
+            listContainer.innerHTML = '';
+
+            if (setups.length === 0) {
+                listContainer.innerHTML = '<p style="text-align: center; color: #b0b0b0;">Nenhum setup cadastrado.</p>';
+                return;
+            }
+
+            setups.forEach(setup => {
+                const item = document.createElement('div');
+                item.className = 'setup-list-item';
+                item.innerHTML = `
+                    <div class="setup-item-details">
+                        <h4>${setup.name}</h4>
+                        <p><i class="fas fa-lightbulb"></i> ${setup.lighting} | <i class="fas fa-home"></i> ${setup.environment} ${setup.lightDuration ? `| <i class="fas fa-hourglass-half"></i> ${setup.lightDuration}` : ''}</p>
+                    </div>
+                    <div class="setup-item-actions">
+                        <button class="edit-setup-btn" data-id="${setup.id}" title="Editar"><i class="fas fa-edit"></i></button>
+                        <button class="delete-setup-btn" data-id="${setup.id}" title="Excluir"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
+        function handleSetupFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('setupId').value;
+            const name = document.getElementById('setupName').value.trim();
+            const lighting = document.getElementById('setupLighting').value.trim();
+            const environment = document.getElementById('setupEnvironment').value.trim();
+            const lightDuration = document.getElementById('setupLightDuration').value.trim();
+
+            if (!name || !lighting || !environment) {
+                showStatusBar('Todos os campos do setup são obrigatórios.', 'error');
+                return;
+            }
+
+            if (id) {
+                // Editar setup existente
+                const setupIndex = setups.findIndex(s => s.id === id);
+                if (setupIndex !== -1) {
+                    setups[setupIndex] = { ...setups[setupIndex], name, lighting, environment, lightDuration };
+                    showStatusBar('Setup atualizado com sucesso!', 'success');
+                }
+            } else {
+                // Adicionar novo setup
+                const newSetup = { id: String(Date.now()), name, lighting, environment, lightDuration };
+                setups.push(newSetup);
+                showStatusBar('Setup adicionado com sucesso!', 'success');
+            }
+
+            saveData();
+            renderSetupsList();
+            renderEnvironmentsSummary();
+            renderPlantList(); // Atualiza os cards das plantas caso um setup tenha sido editado
+            document.getElementById('setupForm').reset();
+            document.getElementById('setupId').value = '';
+        }
+
+        function editSetup(id) {
+            const setup = setups.find(s => s.id === id);
+            if (setup) {
+                document.getElementById('setupId').value = setup.id;
+                document.getElementById('setupName').value = setup.name;
+                document.getElementById('setupLighting').value = setup.lighting;
+                document.getElementById('setupEnvironment').value = setup.environment;
+                document.getElementById('setupLightDuration').value = setup.lightDuration || '';
+                document.getElementById('setupName').focus(); // Foca no campo de nome para facilitar a edição
+            }
+        }
+
+        function deleteSetup(id) {
+            // Verificar se o setup está em uso
+            const isSetupInUse = plants.some(plant => plant.setupId === id);
+            if (isSetupInUse) {
+                alert('Este setup não pode ser excluído porque está sendo usado por uma ou mais plantas.');
+                return;
+            }
+
+            if (confirm('Tem certeza que deseja excluir este setup?')) {
+                setups = setups.filter(s => s.id !== id);
+                saveData();
+                renderEnvironmentsSummary();
+                renderSetupsList();
+                showStatusBar('Setup excluído com sucesso.', 'success');
+            }
+        }
+
+        // --- FIM DA LÓGICA DE SETUPS ---
     </script>
 </body>
 </html>
