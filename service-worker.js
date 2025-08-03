@@ -41,11 +41,29 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  // We only want to apply this strategy to GET requests.
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Se o recurso estiver no cache, retorna ele. Senão, busca na rede.
-        return response || fetch(event.request);
-      })
+    caches.match(event.request).then(cachedResponse => {
+      // If the resource is in the cache, return it.
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      // If the resource is not in the cache, fetch it from the network.
+      return fetch(event.request).then(networkResponse => {
+        // Clone the response because it's a stream and can only be consumed once.
+        const responseToCache = networkResponse.clone();
+
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, responseToCache);
+        });
+
+        return networkResponse;
+      });
+    })
   );
 });
